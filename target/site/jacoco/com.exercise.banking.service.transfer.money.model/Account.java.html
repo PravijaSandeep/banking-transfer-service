@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Account.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Money Transfer Service</a> &gt; <a href="index.source.html" class="el_package">com.exercise.banking.service.transfer.money.model</a> &gt; <span class="el_source">Account.java</span></div><h1>Account.java</h1><pre class="source lang-java linenums">package com.exercise.banking.service.transfer.money.model;
+
+import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class Account {
+
+    @Id
+    private String accNum;   // The unique account number
+
+    private BigDecimal balance;   // Account balance
+
+    private String holderName;   // Name of the account holder
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;bank_code&quot;, referencedColumnName = &quot;code&quot;)
+    private Bank bank;   // The bank this account is associated with
+
+    @OneToMany(mappedBy = &quot;payerAccount&quot;, cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set&lt;Payee&gt; payees = new HashSet&lt;&gt;();   // Set of payees associated with this account
+    
+    public void addPayee(Payee payee) {
+<span class="fc" id="L40">        payee.setPayerAccount(this); </span>
+<span class="fc" id="L41">        this.payees.add(payee);      // Add the Payee to the set</span>
+<span class="fc" id="L42">    }</span>
+    
+    @Override
+    public boolean equals(Object o) {
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        if (this == o) return true;</span>
+<span class="nc bnc" id="L47" title="All 4 branches missed.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="nc" id="L48">        Account account = (Account) o;</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">        return Objects.equals(accNum, account.accNum) &amp;&amp;</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">               Objects.equals(holderName, account.holderName) &amp;&amp;</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">               Objects.equals(bank, account.bank);</span>
+    }
+
+    @Override
+    public int hashCode() {
+<span class="fc" id="L56">        return Objects.hash(accNum, holderName, bank);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

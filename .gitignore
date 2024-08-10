@@ -1,5 +1,13 @@
 HELP.md
+
+# Ignore the entire target directory
 target/
+
+# Except for the JaCoCo report files
+!target/site/
+!target/site/jacoco/
+!target/site/jacoco/*.html
+
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
