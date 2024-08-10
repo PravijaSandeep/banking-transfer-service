@@ -146,13 +146,13 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
 	protected Transaction createTransaction(Account payerAccount, Payee payee, BigDecimal amount, String type) {
 		// Record the transaction
 <span class="fc" id="L148">        return new Transaction(</span>
-<span class="fc" id="L149">                null,  // ID will be auto-generated</span>
-<span class="fc" id="L150">                payerAccount,</span>
-<span class="fc" id="L151">                payee,</span>
-<span class="fc" id="L152">                amount,</span>
-<span class="fc" id="L153">                null,  // Timestamp will be set automatically</span>
-<span class="fc" id="L154">                TransactionStatus.BEGIN,</span>
-<span class="fc" id="L155">                type</span>
+                null,  // ID will be auto-generated
+                payerAccount,
+                payee,
+                amount,
+                null,  // Timestamp will be set automatically
+                TransactionStatus.BEGIN,
+                type
                );
 	}
 

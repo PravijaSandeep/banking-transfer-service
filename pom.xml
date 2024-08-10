@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.exercise.banking</groupId>
-	<artifactId>amount-transfer-service</artifactId>
+	<artifactId>money-transfer-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Money Transfer Service</name>
 	<description>Excercise project for banking Amount transfer service</description>
