@@ -67,7 +67,7 @@ class ConcurrentTransferServiceTest {
         // Mock repository and service responses
         when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
         when(accRepo.findById("ACC002")).thenReturn(Optional.of(payeeAccount));
-        when(accountService.getPayeeByAccountNumbersOrThrow("ACC001", "ACC002")).thenReturn(payee1);
+        when(accountService.getPayeeByAccountNumbersOrThrow("ACC001", "ACC002","testCode1")).thenReturn(payee1);
 
      // Mock the save behavior of the transaction repository
         when(txnRepo.save(any(Transaction.class))).thenAnswer(invocation -> {

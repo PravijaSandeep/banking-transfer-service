@@ -26,7 +26,7 @@ public class AccountService {
 
 	public Account getAccountByNumber(String accountNumber) {
 		return accRepo.findById(accountNumber)
-				.orElseThrow(() -> new AccountNotFoundException(accountNumber));
+				.orElseThrow(() -> new AccountNotFoundException("Account not found"));
 	}
 
 	/**
@@ -35,15 +35,14 @@ public class AccountService {
 	 * @param payeeAccountNum
 	 * @return Optional<Payee> 
 	 */
-	public Payee getPayeeByAccountNumbersOrThrow(String payerAccountNum, String payeeAccountNum) {
-		return payeeRepo.findByPayerAccount_AccNumAndAccNum(payerAccountNum, payeeAccountNum)
-				.orElseThrow(() -> {
-					logger.error("Payee not found for accounts: {} and {}", 
-							payerAccountNum, payeeAccountNum);
-
-					throw new PayeeNotRegisteredException(payeeAccountNum,payerAccountNum);
-
-				});
+	public Payee getPayeeByAccountNumbersOrThrow(String payerAccountNum, String payeeAccountNum, String payeeBankCode) {
+	    return payeeRepo.findByPayerAccount_AccNumAndAccNum(payerAccountNum, payeeAccountNum)
+	        .filter(payee -> payee.getBank().getCode().equals(payeeBankCode))  // Check the bank code
+	        .orElseThrow(() -> {
+	            logger.error("Payee not found or bank code does not match for accounts: {} and {} with bank code {}", 
+	                         payerAccountNum, payeeAccountNum, payeeBankCode);
+	            throw new PayeeNotRegisteredException(payeeAccountNum);
+	        });
 	}
 
 

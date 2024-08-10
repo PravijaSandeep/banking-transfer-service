@@ -134,7 +134,7 @@ class TransferControllerTest {
                  .content(asJsonString(transferRequest)))
              	 .andExpect(status().isNotFound())
              	 .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.name()))
-             	 .andExpect(jsonPath("$.message").value("Account not found with ID: " + nonExistentAccountNumber));
+             	 .andExpect(jsonPath("$.message").value("Account not found"));
      }
     
     @Test
@@ -161,7 +161,7 @@ class TransferControllerTest {
                  .content(asJsonString(transferRequest)))
              	 .andExpect(status().isBadRequest())
              	 .andExpect(jsonPath("$.status").value(HttpStatus.BAD_REQUEST.name()))
-             	 .andExpect(jsonPath("$.message").value("Insufficient funds in account " + accNum));
+             	 .andExpect(jsonPath("$.message").value("Insufficient funds in account"));
      }
     
     
@@ -169,7 +169,6 @@ class TransferControllerTest {
     void testTransferToUnknownPayee() throws Exception {
     	
     	String payeeAccNum = "ACC999";
-    	String payerAccNum = "ACC888";
     	TransferRequest transferRequest = new TransferRequest(
                 "payerAccNumber123",
                 "payeeAccNumber456",
@@ -180,7 +179,7 @@ class TransferControllerTest {
 
 
     	// Mock the behavior of performTransfer
-         when(transferService.performTransfer(any(TransferRequest.class))).thenThrow(new PayeeNotRegisteredException(payeeAccNum,payerAccNum));
+         when(transferService.performTransfer(any(TransferRequest.class))).thenThrow(new PayeeNotRegisteredException(payeeAccNum));
 
       
 
@@ -190,7 +189,7 @@ class TransferControllerTest {
                  .content(asJsonString(transferRequest)))
              	 .andExpect(status().isNotFound())
              	 .andExpect(jsonPath("$.status").value(HttpStatus.NOT_FOUND.name()))
-             	 .andExpect(jsonPath("$.message").value("Transfer failed: Payee with account number '"+ payeeAccNum +"' is not registered by Payer '" + payerAccNum +"'."));
+             	 .andExpect(jsonPath("$.message").value("Payee not registered"));
      }
     
     @Test

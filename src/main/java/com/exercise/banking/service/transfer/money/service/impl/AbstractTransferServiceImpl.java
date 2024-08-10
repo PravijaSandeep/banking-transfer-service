@@ -43,7 +43,6 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public TransferResponse performTransfer(TransferRequest request) {
-
         logger.info("Started processing transfer for request: {}", request);
         Account payerAccount = findPayerAccount(request);
         validateRequest(request, payerAccount);
@@ -73,8 +72,8 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      */
     private void checkBalance(TransferRequest request, Account payerAccount) {
         if (payerAccount.getBalance().compareTo(request.getAmount()) < 0) {
-            logger.error("Transfer failed: Payer account {} has insufficient funds. Account balance is {}", request.getPayerAccNumber(), payerAccount.getBalance());
-            throw new InsufficientFundsException(request.getPayerAccNumber());
+            logger.error("Transfer failed: Payer account {} has insufficient funds. Account balance is {}", request.getPayerAccNumber(), payerAccount.getBalance());// TODO mask account number
+            throw new InsufficientFundsException("Insufficient funds in account");
         }
     }
 
@@ -86,7 +85,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      */
     private Payee findRegisteredPayee(TransferRequest request) {
         logger.info("Finding the registered Payee with account num {} for Payer Account {}", request.getPayeeAccNumber(), request.getPayerAccNumber());
-        Payee payee = accountService.getPayeeByAccountNumbersOrThrow(request.getPayerAccNumber(), request.getPayeeAccNumber());
+        Payee payee = accountService.getPayeeByAccountNumbersOrThrow(request.getPayerAccNumber(), request.getPayeeAccNumber(),request.getPayeeBankCode());
        
         logger.info("Registered Payee for Payer Account {} is {}", request.getPayerAccNumber(), payee.getBank().getCode());
         return payee;
@@ -102,7 +101,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
         return accountRepository.findById(request.getPayerAccNumber())
                 .orElseThrow(() -> {
                     logger.error("Account not found for account number: {}", request.getPayerAccNumber());
-                    return new AccountNotFoundException(request.getPayerAccNumber());
+                    return new AccountNotFoundException("Account not found");
                 });
     }
 

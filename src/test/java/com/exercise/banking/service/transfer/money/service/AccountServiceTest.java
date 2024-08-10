@@ -62,7 +62,7 @@ class AccountServiceTest {
 	    when(payeeRepo.findByPayerAccount_AccNumAndAccNum("PAYER001", "PAYEE001")).thenReturn(Optional.of(payee1));
 	    
 	    // Call the method under test
-	    Payee retrievedPayee = accountService.getPayeeByAccountNumbersOrThrow("PAYER001", "PAYEE001");
+	    Payee retrievedPayee = accountService.getPayeeByAccountNumbersOrThrow("PAYER001", "PAYEE001","testCode1");
 	    
 	    // Validate the result
 	    assertNotNull(retrievedPayee, "The retrieved Payee should not be null");
@@ -104,10 +104,34 @@ class AccountServiceTest {
 	}
 	
 	@Test
+	void testPayeeRetrievalWithInvalidBankCode() {
+		// Setup the bank instance
+	    Bank testBank1 = new Bank();
+	    testBank1.setCode("testCode1");
+	    testBank1.setName("testBank1");
+
+	    // Setup the payer account with an initial balance and link to the bank
+	    Account payerAccount = new Account("PAYER001", new BigDecimal("1000.00"), "Payer1", testBank1, new HashSet<>());
+	    
+	    // Create a Payee and associate it with the payer account
+	    Payee payee1 = new Payee(null, "NickName", "PAYEE001",PayeeType.INTRA_BANK, testBank1, payerAccount);
+	    payerAccount.getPayees().add(payee1);
+	    
+	    // Mock the repository call to return the Payee
+	    when(payeeRepo.findByPayerAccount_AccNumAndAccNum("PAYER001", "PAYEE001")).thenReturn(Optional.of(payee1));
+	    
+	    
+	    assertThrows(PayeeNotRegisteredException.class, () -> {
+            accountService.getPayeeByAccountNumbersOrThrow("PAYER001", "PAYEE001","invalidCode");
+        }, "Expected PayeeNotRegisteredException to be thrown when payee is not found");
+	}
+	
+	@Test
     void testUnregisteredPayee() {
         // Arrange
         String payerAccountNum = "PAYER001";
         String payeeAccountNum = "PAYEE_NOT_REGISTERED";
+        String payeeBankCode = "PAYEEBANK01";
         
         // Mock the repository to return Optional.empty() for an unregistered payee
         when(payeeRepo.findByPayerAccount_AccNumAndAccNum(payerAccountNum, payeeAccountNum))
@@ -115,7 +139,7 @@ class AccountServiceTest {
         
         // Act & Assert
         assertThrows(PayeeNotRegisteredException.class, () -> {
-            accountService.getPayeeByAccountNumbersOrThrow(payerAccountNum, payeeAccountNum);
+            accountService.getPayeeByAccountNumbersOrThrow(payerAccountNum, payeeAccountNum, payeeBankCode);
         }, "Expected PayeeNotRegisteredException to be thrown when payee is not found");
     }
 	
