@@ -72,7 +72,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      */
     private void checkBalance(TransferRequest request, Account payerAccount) {
         if (payerAccount.getBalance().compareTo(request.getAmount()) < 0) {
-            logger.error("Transfer failed: Payer account {} has insufficient funds. Account balance is {}", request.getPayerAccNumber(), payerAccount.getBalance());// TODO mask account number
+            logger.error("Transfer failed: Payer account has insufficient funds. Account balance is {}", payerAccount.getBalance());
             throw new InsufficientFundsException("Insufficient funds in account");
         }
     }
@@ -87,7 +87,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
         logger.info("Finding the registered Payee with account num {} for Payer Account {}", request.getPayeeAccNumber(), request.getPayerAccNumber());
         Payee payee = accountService.getPayeeByAccountNumbersOrThrow(request.getPayerAccNumber(), request.getPayeeAccNumber(),request.getPayeeBankCode());
        
-        logger.info("Registered Payee for Payer Account {} is {}", request.getPayerAccNumber(), payee.getBank().getCode());
+        logger.info("Registered Payee for Payer Account  is {}", payee.getName());
         return payee;
     }
 
@@ -99,10 +99,9 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      */
     private Account findPayerAccount(TransferRequest request) {
         return accountRepository.findById(request.getPayerAccNumber())
-                .orElseThrow(() -> {
-                    logger.error("Account not found for account number: {}", request.getPayerAccNumber());
-                    return new AccountNotFoundException("Account not found");
-                });
+                .orElseThrow(() -> 
+                     new AccountNotFoundException("Account not found")
+                );
     }
 
     /**
@@ -124,21 +123,20 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
             // Save the transaction with status "Success"
             transaction.setStatus(TransactionStatus.SUCCESS);
             transaction = txnRepository.save(transaction);
-            Long transactionId = transaction.getId();
 
-            logger.info("Transaction {} recorded successfully", transactionId);
+            logger.info("Transaction {} recorded successfully", transaction.getTransactionId());
 
             return transaction;
 
         } catch (Exception e) {
             // If any error occurs, log the exception
-            logger.error("Transaction failed for payer account {} due to exception {}", payerAccount.getAccNum(), e.getMessage(), e);
+            logger.error("Transaction failed due to exception {}", e.getMessage(), e);
 
             // Set the transaction status to "Failure"
             transaction.setStatus(TransactionStatus.FAILURE);
             txnRepository.save(transaction); // Save the failed transaction
 
-            throw new TransactionProcessingException(transaction.getId(), "Error processing transaction", e);
+            throw new TransactionProcessingException("Error processing transaction");
         }
     }
 
@@ -151,7 +149,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
                 payee,
                 amount,
                 null,  // Timestamp will be set automatically
-                TransactionStatus.BEGIN,
+                TransactionStatus.PENDING,
                 type
                );
 	}
@@ -162,9 +160,9 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param amount
      */
 	private synchronized void updatePayerAccountBalance(Account payerAccount, BigDecimal amount) {
-		logger.info("Debiting {} from payer Account: {} with balance: {}", amount, payerAccount.getAccNum(), payerAccount.getBalance());
+		logger.info("Debiting {} from payer Account with balance: {}", amount,  payerAccount.getBalance());
         BigDecimal balance = payerAccount.getBalance().subtract(amount);
-        logger.info("Updating balance of '{}' to '{}'.", payerAccount.getAccNum(), balance);
+        logger.info("Updating balance to '{}'.", balance);
 
         payerAccount.setBalance(balance);
         accountRepository.save(payerAccount);
@@ -178,14 +176,15 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @return
      */
     private TransferResponse sendResponse(Transaction txn) {
-        TransferResponse response = new TransferResponse();
-        response.setTransactionId(txn.getId().toString());
-        response.setStatus(txn.getStatus().name());
-        response.setBalance(txn.getPayerAccount().getBalance());
-        response.setAmount(txn.getAmount());
-        response.setTransferType(txn.getType());
+        
+    	return new TransferResponse(
+    			 txn.getTransactionId(),               // transactionId
+    			 txn.getStatus().name(),                  // status
+    			 txn.getPayerAccount().getBalance(),  // balance
+    			 txn.getAmount(),
+    			 txn.getType()// transferType
+         	);
 
-        return response;
     }
 
     /**

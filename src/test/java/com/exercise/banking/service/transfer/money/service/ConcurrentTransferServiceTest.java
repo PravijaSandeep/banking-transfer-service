@@ -71,9 +71,7 @@ class ConcurrentTransferServiceTest {
 
      // Mock the save behavior of the transaction repository
         when(txnRepo.save(any(Transaction.class))).thenAnswer(invocation -> {
-            Transaction txn = invocation.getArgument(0);
-            txn.setId(System.nanoTime());
-            return txn;
+        	return invocation.getArgument(0);
         });
 
         // Run concurrent transfers

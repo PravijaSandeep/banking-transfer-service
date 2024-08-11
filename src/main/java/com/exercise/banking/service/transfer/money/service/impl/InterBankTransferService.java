@@ -30,14 +30,13 @@ public class InterBankTransferService extends  AbstractTransferServiceImpl{
 	public synchronized Transaction executeTransfer(Account payerAccount, String payeeAccountNum, BigDecimal amount,
 			Payee payee) throws AccountNotFoundException {
 
-
-		logger.info("Executing intra-bank transfer from {} to {}", payerAccount.getAccNum(), payeeAccountNum);
+		logger.info("Executing intra-bank transfer");
 		Transaction txn = recordTransaction(payerAccount, payee, amount,TransferType.INTER_BANK_TRANSFER);
 
 		// TODO call the other bank service API
 		logger.info("Calling external bank API  ");
 
-		logger.info("Txn: {} Transfer of {} completed successfully from Payer account: {} to Payee account: {}",txn.getId(), amount, payerAccount.getAccNum(), payeeAccountNum);
+		logger.info("Txn: {} Transfer of {} completed successfully from Payer accountto Payee account",txn.getTransactionId(), amount);
 
 		return txn;
 	}

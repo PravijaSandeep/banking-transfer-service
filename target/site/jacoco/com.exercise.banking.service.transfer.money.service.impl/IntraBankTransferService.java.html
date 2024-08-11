@@ -28,13 +28,13 @@ public class IntraBankTransferService extends AbstractTransferServiceImpl {
 	@Override
 	@Transactional
 	public synchronized Transaction executeTransfer(Account payerAccount, String payeeAccountNum, BigDecimal amount, Payee payee) throws AccountNotFoundException {
-<span class="fc" id="L31">		logger.info(&quot;Trying to execute intra-bank transfer from {} to {}&quot;, payerAccount.getAccNum(), payeeAccountNum);</span>
+<span class="fc" id="L31">		logger.debug(&quot;Trying to execute intra-bank transfer&quot;);</span>
 <span class="fc" id="L32">		Account payeeAccount = getPayeeAccount(payeeAccountNum);</span>
 <span class="fc" id="L33">		Transaction txn = recordTransaction(payerAccount, payee, amount,TransferType.INTRA_BANK_TRANSFER);</span>
 <span class="fc" id="L34">		updatePayeeBalance(payeeAccount, amount);</span>
-<span class="fc" id="L35">		logger.info(&quot;Txn: {} Payee Account {} balance updated to {}&quot;,txn.getId(),  payeeAccountNum,payeeAccount.getBalance());</span>
+<span class="fc" id="L35">		logger.info(&quot;Txn: {} Payee Account balance updated to {}&quot;,txn.getTransactionId(), payeeAccount.getBalance());</span>
 
-<span class="fc" id="L37">		logger.info(&quot;Txn: {} Transfer of {} completed successfully from Payer account: {} to Payee account: {}&quot;, txn.getId(),amount, payerAccount.getAccNum(), payeeAccountNum);</span>
+<span class="fc" id="L37">		logger.info(&quot;Txn: {} Transfer of {} completed successfully.&quot;, txn.getTransactionId(),amount);</span>
 <span class="fc" id="L38">		return txn;</span>
 	}
 
@@ -58,7 +58,7 @@ public class IntraBankTransferService extends AbstractTransferServiceImpl {
 	 * @return
 	 */
 	private Account getPayeeAccount(String payeeAccountNum) {
-<span class="fc" id="L61">		logger.info(&quot;Getting Payee account details with payeeAccountNum {} &quot;, payeeAccountNum);</span>
+<span class="fc" id="L61">		logger.debug(&quot;Getting Payee account details &quot;);</span>
 <span class="fc" id="L62">		return accountRepository.findById(payeeAccountNum)</span>
 <span class="fc" id="L63">				.orElseThrow(() -&gt;{ </span>
 <span class="fc" id="L64">					logger.error(&quot;Transfer failed: Unable to find Payee account {} &quot;, payeeAccountNum);</span>

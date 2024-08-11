@@ -1,55 +1,48 @@
 package com.exercise.banking.service.transfer.money.model;
 
-import java.util.Objects;
-
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Table(name = "payees")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(of = {"accNum", "name", "bank"})
 public class Payee {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String nickName;  // The nickname for the payee
+    @Column(nullable = false)
+    private String name;
 
-    private String accNum;    // The payee's account number
-    
+    @Column(nullable = false)
+    private String accNum;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private PayeeType type;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bank_code", referencedColumnName = "code")
-    private Bank bank;        // The bank this payee is associated with
+    private Bank bank;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", referencedColumnName = "accNum")
-    private Account payerAccount;  // The main account this payee is associated with
-    
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Payee payee = (Payee) o;
-        return Objects.equals(accNum, payee.accNum) &&
-               Objects.equals(nickName, payee.nickName) &&
-               Objects.equals(bank, payee.bank) &&
-               Objects.equals(payerAccount, payee.payerAccount);
-    }
+    private Account payerAccount;
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(accNum, nickName, bank, payerAccount);
-    }
 }

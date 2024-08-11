@@ -41,7 +41,6 @@ class AccountServiceTest {
 	public void setUp() {
 		MockitoAnnotations.openMocks(this);
 		accountService = new AccountService(accRepo, payeeRepo);
-		
 	}
 	
 	@Test
@@ -67,7 +66,7 @@ class AccountServiceTest {
 	    // Validate the result
 	    assertNotNull(retrievedPayee, "The retrieved Payee should not be null");
 	    assertEquals("PAYEE001", retrievedPayee.getAccNum(), "The Payee account number should match");
-	    assertEquals("NickName", retrievedPayee.getNickName(), "The Payee nickname should match");
+	    assertEquals("NickName", retrievedPayee.getName(), "The Payee nickname should match");
 	    assertEquals(testBank1, retrievedPayee.getBank(), "The Payee's bank should match the expected bank");
 	}
 	

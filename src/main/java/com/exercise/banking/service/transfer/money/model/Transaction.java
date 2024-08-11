@@ -2,28 +2,25 @@ package com.exercise.banking.service.transfer.money.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.UuidGenerator;
 
 @Entity
+@Table(name = "transactions")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(of = {"transactionId", "payerAccount", "payee","amount","timestamp","type","status"})
 public class Transaction {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue
+    @UuidGenerator
+    @Column(name = "transaction_id", updatable = false, nullable = false)
+    private String transactionId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "source_account_id", referencedColumnName = "accNum")
@@ -31,16 +28,20 @@ public class Transaction {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payee_id", referencedColumnName = "id")
-    private Payee payee;   // The payee account for the transaction
+    private Payee payee;
 
+    @Column(nullable = false)
     private BigDecimal amount;
 
+    @Column(nullable = false, updatable = false)
     private LocalDateTime timestamp;
-    
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private TransactionStatus status;
-    
-    // Describes the transfer type
-    private String type; 
+
+    @Column(nullable = false)
+    private String type;
 
 
     @PrePersist
@@ -48,6 +49,8 @@ public class Transaction {
         if (this.timestamp == null) {
             this.timestamp = LocalDateTime.now();
         }
+        if (this.status == null) {
+            this.status = TransactionStatus.PENDING;
+        }
     }
 }
-

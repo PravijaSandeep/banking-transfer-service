@@ -28,13 +28,13 @@ public class IntraBankTransferService extends AbstractTransferServiceImpl {
 	@Override
 	@Transactional
 	public synchronized Transaction executeTransfer(Account payerAccount, String payeeAccountNum, BigDecimal amount, Payee payee) throws AccountNotFoundException {
-		logger.info("Trying to execute intra-bank transfer from {} to {}", payerAccount.getAccNum(), payeeAccountNum);
+		logger.debug("Trying to execute intra-bank transfer");
 		Account payeeAccount = getPayeeAccount(payeeAccountNum);
 		Transaction txn = recordTransaction(payerAccount, payee, amount,TransferType.INTRA_BANK_TRANSFER);
 		updatePayeeBalance(payeeAccount, amount);
-		logger.info("Txn: {} Payee Account {} balance updated to {}",txn.getId(),  payeeAccountNum,payeeAccount.getBalance());
+		logger.info("Txn: {} Payee Account balance updated to {}",txn.getTransactionId(), payeeAccount.getBalance());
 
-		logger.info("Txn: {} Transfer of {} completed successfully from Payer account: {} to Payee account: {}", txn.getId(),amount, payerAccount.getAccNum(), payeeAccountNum);
+		logger.info("Txn: {} Transfer of {} completed successfully.", txn.getTransactionId(),amount);
 		return txn;
 	}
 
@@ -58,7 +58,7 @@ public class IntraBankTransferService extends AbstractTransferServiceImpl {
 	 * @return
 	 */
 	private Account getPayeeAccount(String payeeAccountNum) {
-		logger.info("Getting Payee account details with payeeAccountNum {} ", payeeAccountNum);
+		logger.debug("Getting Payee account details ");
 		return accountRepository.findById(payeeAccountNum)
 				.orElseThrow(() ->{ 
 					logger.error("Transfer failed: Unable to find Payee account {} ", payeeAccountNum);

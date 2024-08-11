@@ -26,6 +26,7 @@ import com.exercise.banking.service.transfer.money.dto.TransferResponse;
 import com.exercise.banking.service.transfer.money.exception.AccountNotFoundException;
 import com.exercise.banking.service.transfer.money.exception.InsufficientFundsException;
 import com.exercise.banking.service.transfer.money.exception.PayeeNotRegisteredException;
+import com.exercise.banking.service.transfer.money.model.TransferType;
 import com.exercise.banking.service.transfer.money.service.TransferService;
 import com.exercise.banking.service.transfer.money.service.TransferServiceSelector;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -68,11 +69,13 @@ class TransferControllerTest {
                 BigDecimal.valueOf(100.00)
         );
 
-        TransferResponse transferResponse = new TransferResponse();
-        transferResponse.setTransactionId("transactionId123");
-        transferResponse.setStatus("SUCCESS");
-        transferResponse.setBalance(BigDecimal.valueOf(900.00));
-        transferResponse.setAmount(BigDecimal.valueOf(100.00));
+        TransferResponse transferResponse = new TransferResponse(
+        	    "transactionId123",               // transactionId
+        	    "SUCCESS",                  // status
+        	    BigDecimal.valueOf(900.00),  // balance
+        	    BigDecimal.valueOf(100.00),
+        	    TransferType.INTRA_BANK_TRANSFER.getValue()// transferType
+        	);
 
 
         // Mock the behavior of performTransfer

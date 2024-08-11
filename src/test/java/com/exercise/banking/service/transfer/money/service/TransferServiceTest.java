@@ -115,7 +115,7 @@ class TransferServiceTest {
         assertEquals("SUCCESS", response.getStatus());
         assertEquals(new BigDecimal("900.00"), response.getBalance());
         assertEquals(new BigDecimal("100.00"), response.getAmount());
-        assertEquals(mockTransaction.getId().toString(), response.getTransactionId());
+        assertEquals(mockTransaction.getTransactionId(), response.getTransactionId());
         assertEquals(new BigDecimal("300.00"), payeeAccount.getBalance());
     }
 	
@@ -313,7 +313,7 @@ class TransferServiceTest {
 	
 	private Transaction createMockTxn() {
 		Transaction mockTransaction = new Transaction();
-        mockTransaction.setId(1234567978L); 
+        mockTransaction.setTransactionId("1234567978"); 
         mockTransaction.setAmount(new BigDecimal("100.00"));
         mockTransaction.setStatus(TransactionStatus.SUCCESS);
 		return mockTransaction;
