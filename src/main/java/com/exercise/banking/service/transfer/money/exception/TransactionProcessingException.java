@@ -1,9 +1,12 @@
 package com.exercise.banking.service.transfer.money.exception;
 
-public class TransactionProcessingException extends RuntimeException{
-	private static final long serialVersionUID = 1L;
+import java.util.UUID;
 
-	public TransactionProcessingException(String message) {
-		super(message);
-	}
+public class TransactionProcessingException extends BaseTransferException{
+
+	private static final long serialVersionUID = -4255593136241282228L;
+
+	public TransactionProcessingException(UUID requestId,String msg) {
+        super(requestId,msg);
+    }
 }

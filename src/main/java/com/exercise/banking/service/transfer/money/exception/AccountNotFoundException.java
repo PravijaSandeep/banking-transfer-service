@@ -1,9 +1,12 @@
 package com.exercise.banking.service.transfer.money.exception;
 
-public class AccountNotFoundException extends RuntimeException {
-	private static final long serialVersionUID = 1L;
+import java.util.UUID;
 
-	public AccountNotFoundException(String msg) {
-        super(msg);
+public class AccountNotFoundException extends BaseTransferException {
+
+	private static final long serialVersionUID = -6533894237752047382L;
+
+	public AccountNotFoundException(UUID requestId) {
+        super(requestId,"Account not found");
     }
 }

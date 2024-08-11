@@ -23,35 +23,35 @@ public class DataInitializer {
     CommandLineRunner loadData(BankRepository bankRepository, AccountRepository accountRepository, PayeeRepository payeeRepository) {
         return args -> {
             // Create and save Banks
-            Bank natwestBank = new Bank();
-            natwestBank.setCode("nw123");
-            natwestBank.setName("NatWest");
+            Bank bankA = new Bank();
+            bankA.setCode("A0001");
+            bankA.setName("BANK_A");
 
-            Bank hsbcBank = new Bank();
-            hsbcBank.setCode("hsbc123");
-            hsbcBank.setName("HSBC");
+            Bank bankB = new Bank();
+            bankB.setCode("B0001");
+            bankB.setName("BANK_B");
 
-            bankRepository.save(natwestBank);
-            bankRepository.save(hsbcBank);
+            bankRepository.save(bankA);
+            bankRepository.save(bankB);
 
             // Create and save Accounts
-            Account account1 = new Account("ACC001", new BigDecimal("1000.00"), "Person1", natwestBank, new HashSet<>());
-            Account account2 = new Account("ACC002", new BigDecimal("2000.00"), "Person2", natwestBank, new HashSet<>());
-            Account account3 = new Account("ACC003", new BigDecimal("3000.00"), "Person3", natwestBank, new HashSet<>());
+            Account account1 = new Account("ACC001", new BigDecimal("1000.00"), "Person1", bankA, new HashSet<>());
+            Account account2 = new Account("ACC002", new BigDecimal("2000.00"), "Person2", bankA, new HashSet<>());
+            Account account3 = new Account("ACC003", new BigDecimal("3000.00"), "Person3", bankA, new HashSet<>());
 
             accountRepository.save(account1);
             accountRepository.save(account2);
             accountRepository.save(account3);
 
             // Create and save Payees for account1
-            Payee payee1 = new Payee(null, "Person1-Payee1", "ACC003", PayeeType.INTRA_BANK, natwestBank, account1);
-            Payee payee2 = new Payee(null, "Person1-Payee2", "OACC001", PayeeType.INTER_BANK, hsbcBank, account1);
+            Payee payee1 = new Payee(null, "Person1-Payee1", "ACC003", PayeeType.INTRA_BANK, bankA, account1);
+            Payee payee2 = new Payee(null, "Person1-Payee2", "OACC001", PayeeType.INTER_BANK, bankB, account1);
 
             account1.setPayees(Set.of(payee1,payee2));
             accountRepository.save(account1);  // This will cascade the save to payees
 
             // Create and save a Payee for account3
-            Payee payee3 = new Payee(null, "Person3-Payee1", "OACC001", PayeeType.INTER_BANK, hsbcBank, account3);
+            Payee payee3 = new Payee(null, "Person3-Payee1", "OACC001", PayeeType.INTER_BANK, bankB, account3);
             account3.setPayees(Set.of(payee3));
             accountRepository.save(account3);  // This will cascade the save to payees
         };

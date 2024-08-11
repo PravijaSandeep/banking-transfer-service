@@ -1,23 +1,66 @@
 package com.exercise.banking.service.transfer.money.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 
 @Getter
-@RequiredArgsConstructor
 @ToString
+@Schema(description = "Transfer Response")
 public final class TransferResponse {
-    // Transaction Id generated in GUID Format
-    private final String transactionId;
-    // Status of Transaction
+    
+    @NotNull(message = "Request ID is required")
+    @Schema(description = "Request ID", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
+    private final UUID requestId;
+    
+    @NotNull(message = "Transaction ID is required")
+    @Schema(description = "Transaction ID", example = "123e4567-e89b-12d3-a456-426614174000")
+    private final UUID transactionId;
+    
+    @NotNull(message = "Status of transaction is required")
+    @Schema(description = "Transaction Status", example = "SUCCESS")
     private final String status;
-    // Balance in Payer account
+    
+    @NotNull(message = "Balance amount in Payer account is required")
+    @Schema(description = "Payer account balance", example = "900.00")
     private final BigDecimal balance;
-    // Transferred amount
+    
+    @NotNull(message = "Transfered amount is required")
+    @Schema(description = "Transfered amount", example = "100.00")
     private final BigDecimal amount;
-    // Indicates the type of transfer like intra bank or inter bank
+    
+    @NotNull(message = "Transfer type is required")
+    @Schema(description = "Transfer type", example = "IntraBankTransfer")
     private final String transferType;
+    
+    @NotNull(message = "The timestamp is required")
+    @Schema(description = "Timestamp", example = "2024-08-11T17:26:13.58163")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+    private final LocalDateTime timestamp;
+    
+    public TransferResponse(
+        UUID requestId,
+        UUID transactionId,
+        String status,
+        BigDecimal balance,
+        BigDecimal amount,
+        String transferType,
+        LocalDateTime timestamp
+    ) {
+        this.requestId = requestId;
+        this.transactionId = transactionId;
+        this.status = status;
+        this.balance = balance;
+        this.amount = amount;
+        this.transferType = transferType;
+        // Set the timestamp to now if it's not provided
+        this.timestamp = (timestamp != null) ? timestamp : LocalDateTime.now();
+    }
 }

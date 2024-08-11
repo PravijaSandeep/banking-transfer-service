@@ -1,5 +1,7 @@
 package com.exercise.banking.service.transfer.money.service;
 
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -24,24 +26,25 @@ public class AccountService {
 		this.payeeRepo = payeeRepo;
 	}
 
-	public Account getAccountByNumber(String accountNumber) {
+	public Account getAccountByNumber(String accountNumber, UUID requestID) {
 		return accRepo.findById(accountNumber)
-				.orElseThrow(() -> new AccountNotFoundException("Account not found"));
+				.orElseThrow(() -> new AccountNotFoundException(requestID));
 	}
 
 	/**
 	 * Search for Payee registered by the Payer.
 	 * @param payerAccountNum
 	 * @param payeeAccountNum
+	 * @param requestId 
 	 * @return Optional<Payee> 
 	 */
-	public Payee getPayeeByAccountNumbersOrThrow(String payerAccountNum, String payeeAccountNum, String payeeBankCode) {
+	public Payee getPayeeByAccountNumbersOrThrow(String payerAccountNum, String payeeAccountNum, String payeeBankCode, UUID requestId) {
 	    return payeeRepo.findByPayerAccount_AccNumAndAccNum(payerAccountNum, payeeAccountNum)
 	        .filter(payee -> payee.getBank().getCode().equals(payeeBankCode))  // Check the bank code
 	        .orElseThrow(() -> {
 	            logger.error("Payee not found or bank code does not match for accounts: {} and {} with bank code {}", 
 	                         payerAccountNum, payeeAccountNum, payeeBankCode);
-	            throw new PayeeNotRegisteredException(payeeAccountNum);
+	            throw new PayeeNotRegisteredException(requestId);
 	        });
 	}
 

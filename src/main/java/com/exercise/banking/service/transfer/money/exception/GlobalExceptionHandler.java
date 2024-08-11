@@ -13,6 +13,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.exercise.banking.service.transfer.money.dto.ErrorResponse;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -27,24 +29,24 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccountNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleAccountNotFoundException(AccountNotFoundException ex) {
         String message = messageSource.getMessage("error.account.notfound", null, LocaleContextHolder.getLocale());
-        logger.error(message, ex);
-        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND, message);
+        logError(message, ex);
+        ErrorResponse errorResponse = new ErrorResponse(ex.getRequestId(),HttpStatus.NOT_FOUND, message);
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(InsufficientFundsException.class)
     public ResponseEntity<ErrorResponse> handleInsufficientFundsException(InsufficientFundsException ex) {
         String message = messageSource.getMessage("error.insufficient.funds", null, LocaleContextHolder.getLocale());
-        logger.error(message, ex);
-        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST, message);
+        logError(message, ex);
+        ErrorResponse errorResponse = new ErrorResponse(ex.getRequestId(),HttpStatus.BAD_REQUEST, message);
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(PayeeNotRegisteredException.class)
     public ResponseEntity<ErrorResponse> handlePayeeNotRegisteredException(PayeeNotRegisteredException ex) {
         String message = messageSource.getMessage("error.payee.notregistered", null, LocaleContextHolder.getLocale());
-        logger.error(message, ex);
-        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND, message);
+        logError(message, ex);
+        ErrorResponse errorResponse = new ErrorResponse(ex.getRequestId(),HttpStatus.NOT_FOUND, message);
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
@@ -57,13 +59,22 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        String message = messageSource.getMessage("error.validation.failed", null, LocaleContextHolder.getLocale());
-        logger.error(message, ex);
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        logger.error("Validation failed: {}", ex.getMessage(), ex);
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error ->
             errors.put(error.getField(), error.getDefaultMessage())
         );
-        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST, "Validation error", errors);
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+    
+    /**
+     * Logs the error in logs with request Id
+     * @param msg
+     * @param exception
+     */
+    private void logError(String msg, BaseTransferException ex) {
+    	logger.error("Request ID: {} Message : {}",ex.getRequestId(),msg, ex);
     }
 }

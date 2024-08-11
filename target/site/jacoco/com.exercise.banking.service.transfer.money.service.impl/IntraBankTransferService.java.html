@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>IntraBankTransferService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Money Transfer Service</a> &gt; <a href="index.source.html" class="el_package">com.exercise.banking.service.transfer.money.service.impl</a> &gt; <span class="el_source">IntraBankTransferService.java</span></div><h1>IntraBankTransferService.java</h1><pre class="source lang-java linenums">package com.exercise.banking.service.transfer.money.service.impl;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,23 +20,23 @@ import com.exercise.banking.service.transfer.money.service.AccountService;
 @Service
 public class IntraBankTransferService extends AbstractTransferServiceImpl {
 
-<span class="fc" id="L22">	private static final Logger logger = LoggerFactory.getLogger(IntraBankTransferService.class);</span>
+<span class="fc" id="L23">	private static final Logger logger = LoggerFactory.getLogger(IntraBankTransferService.class);</span>
 
 	public IntraBankTransferService(AccountRepository accountRepository, TransactionRepository txnRepository, AccountService accountService) {
-<span class="fc" id="L25">		super(accountRepository, txnRepository, accountService);</span>
-<span class="fc" id="L26">	}</span>
+<span class="fc" id="L26">		super(accountRepository, txnRepository, accountService);</span>
+<span class="fc" id="L27">	}</span>
 
 	@Override
 	@Transactional
-	public synchronized Transaction executeTransfer(Account payerAccount, String payeeAccountNum, BigDecimal amount, Payee payee) throws AccountNotFoundException {
-<span class="fc" id="L31">		logger.debug(&quot;Trying to execute intra-bank transfer&quot;);</span>
-<span class="fc" id="L32">		Account payeeAccount = getPayeeAccount(payeeAccountNum);</span>
-<span class="fc" id="L33">		Transaction txn = recordTransaction(payerAccount, payee, amount,TransferType.INTRA_BANK_TRANSFER);</span>
-<span class="fc" id="L34">		updatePayeeBalance(payeeAccount, amount);</span>
-<span class="fc" id="L35">		logger.info(&quot;Txn: {} Payee Account balance updated to {}&quot;,txn.getTransactionId(), payeeAccount.getBalance());</span>
+	public synchronized Transaction executeTransfer(Account payerAccount, String payeeAccountNum, BigDecimal amount, Payee payee, UUID requestId) throws AccountNotFoundException {
+<span class="fc" id="L32">		logger.debug(&quot;Trying to execute intra-bank transfer&quot;);</span>
+<span class="fc" id="L33">		Account payeeAccount = getPayeeAccount(payeeAccountNum,requestId);</span>
+<span class="fc" id="L34">		Transaction txn = recordTransaction(payerAccount, payee, amount,TransferType.INTRA_BANK_TRANSFER,requestId);</span>
+<span class="fc" id="L35">		updatePayeeBalance(payeeAccount, amount);</span>
+<span class="fc" id="L36">		logger.info(&quot;Txn: {} Payee Account balance updated to {}&quot;,txn.getTransactionId(), payeeAccount.getBalance());</span>
 
-<span class="fc" id="L37">		logger.info(&quot;Txn: {} Transfer of {} completed successfully.&quot;, txn.getTransactionId(),amount);</span>
-<span class="fc" id="L38">		return txn;</span>
+<span class="fc" id="L38">		logger.info(&quot;Txn: {} Transfer of {} completed successfully.&quot;, txn.getTransactionId(),amount);</span>
+<span class="fc" id="L39">		return txn;</span>
 	}
 
 	/**
@@ -46,23 +47,24 @@ public class IntraBankTransferService extends AbstractTransferServiceImpl {
 	 */
 	private  Account updatePayeeBalance( Account payeeAccount, BigDecimal amount) {
 		// Add the transfer amount to the payee's account balance
-<span class="fc" id="L49">		payeeAccount.setBalance(payeeAccount.getBalance().add(amount));</span>
-<span class="fc" id="L50">		accountRepository.save(payeeAccount);</span>
+<span class="fc" id="L50">		payeeAccount.setBalance(payeeAccount.getBalance().add(amount));</span>
+<span class="fc" id="L51">		accountRepository.save(payeeAccount);</span>
 
-<span class="fc" id="L52">		return payeeAccount;</span>
+<span class="fc" id="L53">		return payeeAccount;</span>
 	}
 
 	/**
 	 * 
 	 * @param payeeAccountNum
+	 * @param requestId 
 	 * @return
 	 */
-	private Account getPayeeAccount(String payeeAccountNum) {
-<span class="fc" id="L61">		logger.debug(&quot;Getting Payee account details &quot;);</span>
-<span class="fc" id="L62">		return accountRepository.findById(payeeAccountNum)</span>
-<span class="fc" id="L63">				.orElseThrow(() -&gt;{ </span>
-<span class="fc" id="L64">					logger.error(&quot;Transfer failed: Unable to find Payee account {} &quot;, payeeAccountNum);</span>
-<span class="fc" id="L65">					throw new AccountNotFoundException(payeeAccountNum);</span>
+	private Account getPayeeAccount(String payeeAccountNum, UUID requestId) {
+<span class="fc" id="L63">		logger.debug(&quot;Getting Payee account details &quot;);</span>
+<span class="fc" id="L64">		return accountRepository.findById(payeeAccountNum)</span>
+<span class="fc" id="L65">				.orElseThrow(() -&gt;{ </span>
+<span class="fc" id="L66">					logger.error(&quot;Transfer failed for request {}: Unable to find Payee account&quot;,requestId);</span>
+<span class="fc" id="L67">					throw new AccountNotFoundException(requestId);</span>
 				});
 	}
 

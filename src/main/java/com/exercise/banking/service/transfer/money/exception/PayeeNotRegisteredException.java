@@ -1,10 +1,13 @@
 package com.exercise.banking.service.transfer.money.exception;
 
-public class PayeeNotRegisteredException extends RuntimeException{
-	
-	private static final long serialVersionUID = 1L;
+import java.util.UUID;
 
-	public PayeeNotRegisteredException(String payeeAccountNum) {
-        super(String.format("Transfer failed: Payee with account number '%s' is not registered by Payer.", payeeAccountNum));
+public class PayeeNotRegisteredException extends BaseTransferException{
+	
+
+	private static final long serialVersionUID = 2064413559066629999L;
+
+	public PayeeNotRegisteredException(UUID requestId) {
+        super(requestId, "Payee not registered");
 	}
 }

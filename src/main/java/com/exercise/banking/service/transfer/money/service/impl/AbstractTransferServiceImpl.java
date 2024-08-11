@@ -1,6 +1,8 @@
 package com.exercise.banking.service.transfer.money.service.impl;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,11 +45,11 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public TransferResponse performTransfer(TransferRequest request) {
-        logger.info("Started processing transfer for request: {}", request);
+        logger.info("Started processing transfer for request");
         Account payerAccount = findPayerAccount(request);
         validateRequest(request, payerAccount);
         Payee payee = findRegisteredPayee(request);
-        Transaction txn = executeTransfer(payerAccount, request.getPayeeAccNumber(), request.getAmount(), payee);
+        Transaction txn = executeTransfer(payerAccount, request.getPayeeAccNumber(), request.getAmount(), payee,request.getRequestId());
         return sendResponse(txn);
     }
 
@@ -73,7 +75,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
     private void checkBalance(TransferRequest request, Account payerAccount) {
         if (payerAccount.getBalance().compareTo(request.getAmount()) < 0) {
             logger.error("Transfer failed: Payer account has insufficient funds. Account balance is {}", payerAccount.getBalance());
-            throw new InsufficientFundsException("Insufficient funds in account");
+            throw new InsufficientFundsException(request.getRequestId());
         }
     }
 
@@ -84,10 +86,9 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @return registered payee
      */
     private Payee findRegisteredPayee(TransferRequest request) {
-        logger.info("Finding the registered Payee with account num {} for Payer Account {}", request.getPayeeAccNumber(), request.getPayerAccNumber());
-        Payee payee = accountService.getPayeeByAccountNumbersOrThrow(request.getPayerAccNumber(), request.getPayeeAccNumber(),request.getPayeeBankCode());
-       
-        logger.info("Registered Payee for Payer Account  is {}", payee.getName());
+        logger.info("Finding the registered Payee");
+        Payee payee = accountService.getPayeeByAccountNumbersOrThrow(request.getPayerAccNumber(), request.getPayeeAccNumber(),request.getPayeeBankCode(),request.getRequestId());
+        logger.debug("Registered Payee found is {}", payee.getName());
         return payee;
     }
 
@@ -100,7 +101,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
     private Account findPayerAccount(TransferRequest request) {
         return accountRepository.findById(request.getPayerAccNumber())
                 .orElseThrow(() -> 
-                     new AccountNotFoundException("Account not found")
+                     new AccountNotFoundException(request.getRequestId())
                 );
     }
 
@@ -111,10 +112,11 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param payee the payee's account
      * @param amount the amount to transfer
      * @param type the type of transfer (intra-bank or inter-bank)
+     * @param requestId 
      * @return the saved Transaction object
      */
-    protected Transaction recordTransaction(Account payerAccount, Payee payee, BigDecimal amount, TransferType type) {
-        Transaction transaction = createTransaction(payerAccount, payee, amount, type.getValue());
+    protected Transaction recordTransaction(Account payerAccount, Payee payee, BigDecimal amount, TransferType type, UUID requestId) {
+        Transaction transaction = createTransaction(payerAccount, payee, amount, type.getValue(),requestId);
 
         try {
             // Update the payer account balance
@@ -136,15 +138,16 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
             transaction.setStatus(TransactionStatus.FAILURE);
             txnRepository.save(transaction); // Save the failed transaction
 
-            throw new TransactionProcessingException("Error processing transaction");
+            throw new TransactionProcessingException(requestId,e.getMessage());
         }
     }
 
     
-	protected Transaction createTransaction(Account payerAccount, Payee payee, BigDecimal amount, String type) {
+	protected Transaction createTransaction(Account payerAccount, Payee payee, BigDecimal amount, String type, UUID requestId) {
 		// Record the transaction
         return new Transaction(
                 null,  // ID will be auto-generated
+                requestId,
                 payerAccount,
                 payee,
                 amount,
@@ -178,11 +181,13 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
     private TransferResponse sendResponse(Transaction txn) {
         
     	return new TransferResponse(
+    			txn.getRequestId(),// original request id
     			 txn.getTransactionId(),               // transactionId
     			 txn.getStatus().name(),                  // status
     			 txn.getPayerAccount().getBalance(),  // balance
     			 txn.getAmount(),
-    			 txn.getType()// transferType
+    			 txn.getType(),// transferType
+    			 LocalDateTime.now()
          	);
 
     }
@@ -197,5 +202,5 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @return TransferResponse
      * @throws AccountNotFoundException
      */
-    protected abstract Transaction executeTransfer(Account payerAccount, String payeeAccountNum, BigDecimal amount, Payee payee) throws AccountNotFoundException;
+    protected abstract Transaction executeTransfer(Account payerAccount, String payeeAccountNum, BigDecimal amount, Payee payee, UUID requestId) throws AccountNotFoundException;
 }

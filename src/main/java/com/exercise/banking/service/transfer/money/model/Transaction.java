@@ -2,6 +2,8 @@ package com.exercise.banking.service.transfer.money.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -14,13 +16,16 @@ import org.hibernate.annotations.UuidGenerator;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@EqualsAndHashCode(of = {"transactionId", "payerAccount", "payee","amount","timestamp","type","status"})
+@EqualsAndHashCode(of = {"transactionId","requestId", "payerAccount", "payee","amount","timestamp","type","status"})
 public class Transaction {
     @Id
     @GeneratedValue
     @UuidGenerator
     @Column(name = "transaction_id", updatable = false, nullable = false)
-    private String transactionId;
+    private UUID transactionId;
+    
+    @Column(nullable = false)
+    private  UUID requestId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "source_account_id", referencedColumnName = "accNum")

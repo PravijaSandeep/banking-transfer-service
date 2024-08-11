@@ -5,8 +5,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -61,13 +63,14 @@ class ConcurrentTransferServiceTest {
         Payee payee1 = new Payee(null, "Person1-Payee1", "ACC002", PayeeType.INTRA_BANK, testBank1, payerAccount);
         payerAccount.getPayees().add(payee1);
 
+        UUID requestId = UUID.randomUUID();
         Account payeeAccount = new Account("ACC002", new BigDecimal("200.00"), "Payee1", testBank1, null);
-        TransferRequest request = new TransferRequest("ACC001", "ACC002", "testBank1", "testCode1", new BigDecimal("100.00"));
+        TransferRequest request = new TransferRequest(requestId,"ACC001", "ACC002", "testBank1", "testCode1", new BigDecimal("100.00"),LocalDateTime.now());
 
         // Mock repository and service responses
         when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
         when(accRepo.findById("ACC002")).thenReturn(Optional.of(payeeAccount));
-        when(accountService.getPayeeByAccountNumbersOrThrow("ACC001", "ACC002","testCode1")).thenReturn(payee1);
+        when(accountService.getPayeeByAccountNumbersOrThrow("ACC001", "ACC002","testCode1",requestId)).thenReturn(payee1);
 
      // Mock the save behavior of the transaction repository
         when(txnRepo.save(any(Transaction.class))).thenAnswer(invocation -> {

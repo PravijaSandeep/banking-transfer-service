@@ -32,12 +32,11 @@ public class TransferServiceSelector {
             throw new IllegalArgumentException("Payee bank code cannot be null");
         }
 		
-		logger.info("Payer Bankcode : {} Payee Bankcode:{}",payerBankCode,payeeBankCode);
-		
 		if(payerBankCode.equals(payeeBankCode)) {
-			
+			logger.info("Trying to process intra bank transfer");
 			return intraBankSvc;
 		}else {
+			logger.info("Trying to process inter bank transfer");
 			return interBankSvc;
 		}
 		

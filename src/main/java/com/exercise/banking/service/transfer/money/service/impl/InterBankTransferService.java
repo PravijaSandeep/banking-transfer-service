@@ -1,6 +1,7 @@
 package com.exercise.banking.service.transfer.money.service.impl;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,10 +29,10 @@ public class InterBankTransferService extends  AbstractTransferServiceImpl{
 	@Override
 	@Transactional
 	public synchronized Transaction executeTransfer(Account payerAccount, String payeeAccountNum, BigDecimal amount,
-			Payee payee) throws AccountNotFoundException {
+			Payee payee, UUID requestId) throws AccountNotFoundException {
 
 		logger.info("Executing intra-bank transfer");
-		Transaction txn = recordTransaction(payerAccount, payee, amount,TransferType.INTER_BANK_TRANSFER);
+		Transaction txn = recordTransaction(payerAccount, payee, amount,TransferType.INTER_BANK_TRANSFER,requestId);
 
 		// TODO call the other bank service API
 		logger.info("Calling external bank API  ");

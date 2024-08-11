@@ -1,6 +1,7 @@
 package com.exercise.banking.service.transfer.money.service.impl;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,10 +28,10 @@ public class IntraBankTransferService extends AbstractTransferServiceImpl {
 
 	@Override
 	@Transactional
-	public synchronized Transaction executeTransfer(Account payerAccount, String payeeAccountNum, BigDecimal amount, Payee payee) throws AccountNotFoundException {
+	public synchronized Transaction executeTransfer(Account payerAccount, String payeeAccountNum, BigDecimal amount, Payee payee, UUID requestId) throws AccountNotFoundException {
 		logger.debug("Trying to execute intra-bank transfer");
-		Account payeeAccount = getPayeeAccount(payeeAccountNum);
-		Transaction txn = recordTransaction(payerAccount, payee, amount,TransferType.INTRA_BANK_TRANSFER);
+		Account payeeAccount = getPayeeAccount(payeeAccountNum,requestId);
+		Transaction txn = recordTransaction(payerAccount, payee, amount,TransferType.INTRA_BANK_TRANSFER,requestId);
 		updatePayeeBalance(payeeAccount, amount);
 		logger.info("Txn: {} Payee Account balance updated to {}",txn.getTransactionId(), payeeAccount.getBalance());
 
@@ -55,14 +56,15 @@ public class IntraBankTransferService extends AbstractTransferServiceImpl {
 	/**
 	 * 
 	 * @param payeeAccountNum
+	 * @param requestId 
 	 * @return
 	 */
-	private Account getPayeeAccount(String payeeAccountNum) {
+	private Account getPayeeAccount(String payeeAccountNum, UUID requestId) {
 		logger.debug("Getting Payee account details ");
 		return accountRepository.findById(payeeAccountNum)
 				.orElseThrow(() ->{ 
-					logger.error("Transfer failed: Unable to find Payee account {} ", payeeAccountNum);
-					throw new AccountNotFoundException(payeeAccountNum);
+					logger.error("Transfer failed for request {}: Unable to find Payee account",requestId);
+					throw new AccountNotFoundException(requestId);
 				});
 	}
 

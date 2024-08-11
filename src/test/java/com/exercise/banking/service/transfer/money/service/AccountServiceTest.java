@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,10 +38,13 @@ class AccountServiceTest {
 	
 	private AccountService accountService;
 	
+	private  UUID requestId ;
+	
 	@BeforeEach
 	public void setUp() {
 		MockitoAnnotations.openMocks(this);
 		accountService = new AccountService(accRepo, payeeRepo);
+		requestId = UUID.randomUUID();
 	}
 	
 	@Test
@@ -61,7 +65,7 @@ class AccountServiceTest {
 	    when(payeeRepo.findByPayerAccount_AccNumAndAccNum("PAYER001", "PAYEE001")).thenReturn(Optional.of(payee1));
 	    
 	    // Call the method under test
-	    Payee retrievedPayee = accountService.getPayeeByAccountNumbersOrThrow("PAYER001", "PAYEE001","testCode1");
+	    Payee retrievedPayee = accountService.getPayeeByAccountNumbersOrThrow("PAYER001", "PAYEE001","testCode1",UUID.randomUUID());
 	    
 	    // Validate the result
 	    assertNotNull(retrievedPayee, "The retrieved Payee should not be null");
@@ -84,7 +88,7 @@ class AccountServiceTest {
 	    
 	    
 	    // Call the method under test
-	    Account retrieved = accountService.getAccountByNumber("PAYER001");
+	    Account retrieved = accountService.getAccountByNumber("PAYER001",UUID.randomUUID());
 	    
 	    // Validate the result
 	    assertNotNull(retrieved, "The retrieved account should not be null");
@@ -99,7 +103,8 @@ class AccountServiceTest {
 	    Bank testBank1 = new Bank();
 	    testBank1.setCode("testCode1");
 	    testBank1.setName("testBank1");
-	    assertThrows(AccountNotFoundException.class,() -> accountService.getAccountByNumber("PAYER001"));
+	   
+	    assertThrows(AccountNotFoundException.class, () -> accountService.getAccountByNumber("PAYER001", requestId));
 	}
 	
 	@Test
@@ -121,7 +126,7 @@ class AccountServiceTest {
 	    
 	    
 	    assertThrows(PayeeNotRegisteredException.class, () -> {
-            accountService.getPayeeByAccountNumbersOrThrow("PAYER001", "PAYEE001","invalidCode");
+            accountService.getPayeeByAccountNumbersOrThrow("PAYER001", "PAYEE001","invalidCode",requestId);
         }, "Expected PayeeNotRegisteredException to be thrown when payee is not found");
 	}
 	
@@ -138,7 +143,7 @@ class AccountServiceTest {
         
         // Act & Assert
         assertThrows(PayeeNotRegisteredException.class, () -> {
-            accountService.getPayeeByAccountNumbersOrThrow(payerAccountNum, payeeAccountNum, payeeBankCode);
+            accountService.getPayeeByAccountNumbersOrThrow(payerAccountNum, payeeAccountNum, payeeBankCode,requestId);
         }, "Expected PayeeNotRegisteredException to be thrown when payee is not found");
     }
 	

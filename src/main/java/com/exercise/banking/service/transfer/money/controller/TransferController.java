@@ -2,6 +2,7 @@ package com.exercise.banking.service.transfer.money.controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -11,9 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.exercise.banking.service.transfer.money.config.BankConfiguration;
+import com.exercise.banking.service.transfer.money.dto.ErrorResponse;
 import com.exercise.banking.service.transfer.money.dto.TransferRequest;
 import com.exercise.banking.service.transfer.money.dto.TransferResponse;
-import com.exercise.banking.service.transfer.money.exception.ErrorResponse;
 import com.exercise.banking.service.transfer.money.service.TransferService;
 import com.exercise.banking.service.transfer.money.service.TransferServiceSelector;
 
@@ -22,6 +23,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @RestController
@@ -67,13 +69,20 @@ public class TransferController {
             )
         }
     )
-    public ResponseEntity<TransferResponse> transfer(@Valid @RequestBody TransferRequest request) {
-        logger.info("Received Transfer Request : {}", request);
+    public ResponseEntity<TransferResponse> transfer(@Valid @RequestBody TransferRequest request, HttpServletRequest httpServletRequest) {
+    	
+    	MDC.put("requestId", request.getRequestId().toString()); // add requestId to MDC, so that it is available in all current request log lines.
+    	try {
 
-        TransferService service = transferServiceSelector.getService(config.getBankCode(), request.getPayeeBankCode());
-        logger.debug("Selected transfer service: {}", service.getClass().getSimpleName());
+    		logger.info("Received Transfer Request");
 
-        TransferResponse response = service.performTransfer(request);
-        return ResponseEntity.ok(response);
+    		TransferService service = transferServiceSelector.getService(config.getBankCode(), request.getPayeeBankCode());
+
+    		TransferResponse response = service.performTransfer(request);
+    		return ResponseEntity.ok(response);
+    	}finally {
+    		// Ensure to clear the MDC after the request is processed
+            MDC.remove("requestId");
+    	}
     }
 }

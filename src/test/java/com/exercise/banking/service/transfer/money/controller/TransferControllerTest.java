@@ -1,6 +1,7 @@
 package com.exercise.banking.service.transfer.money.controller;
 
 import static org.mockito.ArgumentMatchers.any;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -8,11 +9,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -33,6 +38,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(TransferController.class)
 class TransferControllerTest {
+	
+	private static final Logger logger = LoggerFactory.getLogger(TransferControllerTest.class);
+
 
     @Autowired
     private MockMvc mockMvc;
@@ -45,6 +53,8 @@ class TransferControllerTest {
 
     @Mock
     private TransferService transferService;
+    
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
@@ -56,25 +66,39 @@ class TransferControllerTest {
         // Mocking the behavior of TransferServiceSelector
         when(transferServiceSelector.getService(any(String.class), any(String.class)))
                 .thenReturn(transferService);
+        objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.findAndRegisterModules(); // This will register all available modules, including JavaTimeModule
+
     }
 
     @Test
     void testSuccessTransfer() throws Exception {
         // Given
+    	UUID requestid = UUID.randomUUID();
         TransferRequest transferRequest = new TransferRequest(
+        		requestid,
                 "payerAccNumber123",
                 "payeeAccNumber456",
                 "Payee Bank",
                 "PayeeBankCode",
-                BigDecimal.valueOf(100.00)
+                BigDecimal.valueOf(100.00),
+                LocalDateTime.now()
         );
+        
+        UUID txnId = UUID.randomUUID();
+        
+        logger.info("TxnId: {}",txnId);
+        logger.info("RequestId: {}",requestid);
 
         TransferResponse transferResponse = new TransferResponse(
-        	    "transactionId123",               // transactionId
+        		requestid,
+        		txnId,               // transactionId
         	    "SUCCESS",                  // status
         	    BigDecimal.valueOf(900.00),  // balance
         	    BigDecimal.valueOf(100.00),
-        	    TransferType.INTRA_BANK_TRANSFER.getValue()// transferType
+        	    TransferType.INTRA_BANK_TRANSFER.getValue(),// transferType,
+        	    LocalDateTime.now()
         	);
 
 
@@ -88,7 +112,8 @@ class TransferControllerTest {
                         .content(asJsonString(transferRequest)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.transactionId").value("transactionId123"))
+                .andExpect(jsonPath("$.transactionId").value(txnId.toString()))
+                .andExpect(jsonPath("$.requestId").value(requestid.toString()))
                 .andExpect(jsonPath("$.status").value("SUCCESS"))
                 .andExpect(jsonPath("$.balance").value(900.00))
                 .andExpect(jsonPath("$.amount").value(100.00));
@@ -98,11 +123,13 @@ class TransferControllerTest {
     void testValidationFailure() throws Exception {
         // Given
         TransferRequest transferRequest = new TransferRequest(
+        		UUID.randomUUID(),
                 "payerAccNumber123",
                 "payeeAccNumber456",
                 null,
                 null,
-                BigDecimal.valueOf(100.00)
+                BigDecimal.valueOf(100.00),
+                LocalDateTime.now()
         );
 
 
@@ -116,18 +143,20 @@ class TransferControllerTest {
     @Test
     void testTransferWithInvalidAccount() throws Exception {
     	
-    	String nonExistentAccountNumber = "ACC999";
+    	UUID requestID = UUID.randomUUID();
     	TransferRequest transferRequest = new TransferRequest(
+    			UUID.randomUUID(),
                 "payerAccNumber123",
                 "payeeAccNumber456",
                 "Payee Bank",
                 "PayeeBankCode",
-                BigDecimal.valueOf(100.00)
+                BigDecimal.valueOf(100.00),
+                LocalDateTime.now()
         );
 
 
     	// Mock the behavior of performTransfer
-         when(transferService.performTransfer(any(TransferRequest.class))).thenThrow(new AccountNotFoundException(nonExistentAccountNumber));
+         when(transferService.performTransfer(any(TransferRequest.class))).thenThrow(new AccountNotFoundException(requestID));
 
       
 
@@ -143,18 +172,20 @@ class TransferControllerTest {
     @Test
     void testTransferFromInSufficientFund() throws Exception {
     	
-    	String accNum = "ACC999";
+    	UUID requestID = UUID.randomUUID();
     	TransferRequest transferRequest = new TransferRequest(
+    			requestID,
                 "payerAccNumber123",
                 "payeeAccNumber456",
                 "Payee Bank",
                 "PayeeBankCode",
-                BigDecimal.valueOf(100.00)
+                BigDecimal.valueOf(100.00),
+                LocalDateTime.now()
         );
 
 
     	// Mock the behavior of performTransfer
-         when(transferService.performTransfer(any(TransferRequest.class))).thenThrow(new InsufficientFundsException(accNum));
+         when(transferService.performTransfer(any(TransferRequest.class))).thenThrow(new InsufficientFundsException(requestID));
 
       
 
@@ -171,18 +202,20 @@ class TransferControllerTest {
     @Test
     void testTransferToUnknownPayee() throws Exception {
     	
-    	String payeeAccNum = "ACC999";
+    	UUID requestID = UUID.randomUUID();
     	TransferRequest transferRequest = new TransferRequest(
+    			requestID,
                 "payerAccNumber123",
                 "payeeAccNumber456",
                 "Payee Bank",
                 "PayeeBankCode",
-                BigDecimal.valueOf(100.00)
+                BigDecimal.valueOf(100.00),
+                LocalDateTime.now()
         );
 
 
     	// Mock the behavior of performTransfer
-         when(transferService.performTransfer(any(TransferRequest.class))).thenThrow(new PayeeNotRegisteredException(payeeAccNum));
+         when(transferService.performTransfer(any(TransferRequest.class))).thenThrow(new PayeeNotRegisteredException(requestID));
 
       
 
@@ -199,11 +232,13 @@ class TransferControllerTest {
     void testTransferGeneralException() throws Exception {
     	
     	TransferRequest transferRequest = new TransferRequest(
+    			UUID.randomUUID(),
                 "payerAccNumber123",
                 "payeeAccNumber456",
                 "Payee Bank",
                 "PayeeBankCode",
-                BigDecimal.valueOf(100.00)
+                BigDecimal.valueOf(100.00),
+                LocalDateTime.now()
         );
 
 
@@ -222,12 +257,15 @@ class TransferControllerTest {
      }
 
 
-    // Helper method to convert an object to a JSON string
-    private static String asJsonString(final Object obj) {
+   
+    
+ // Helper method to convert an object to a JSON string
+    private String asJsonString(final Object obj) {
         try {
-            return new ObjectMapper().writeValueAsString(obj);
+            return objectMapper.writeValueAsString(obj); // Use the pre-configured objectMapper
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
+
 }
