@@ -1,7 +1,6 @@
 package com.exercise.banking.service.transfer.money.controller;
 
 import static org.mockito.ArgumentMatchers.any;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -9,7 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +34,7 @@ import com.exercise.banking.service.transfer.money.model.TransferType;
 import com.exercise.banking.service.transfer.money.service.TransferService;
 import com.exercise.banking.service.transfer.money.service.TransferServiceSelector;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 @WebMvcTest(TransferController.class)
 class TransferControllerTest {
@@ -83,7 +83,7 @@ class TransferControllerTest {
                 "Payee Bank",
                 "PayeeBankCode",
                 BigDecimal.valueOf(100.00),
-                LocalDateTime.now()
+                Instant.now().toString()
         );
         
         UUID txnId = UUID.randomUUID();
@@ -98,7 +98,7 @@ class TransferControllerTest {
         	    BigDecimal.valueOf(900.00),  // balance
         	    BigDecimal.valueOf(100.00),
         	    TransferType.INTRA_BANK_TRANSFER.getValue(),// transferType,
-        	    LocalDateTime.now()
+        	    Instant.now()
         	);
 
 
@@ -129,7 +129,7 @@ class TransferControllerTest {
                 null,
                 null,
                 BigDecimal.valueOf(100.00),
-                LocalDateTime.now()
+                Instant.now().toString()
         );
 
 
@@ -151,7 +151,7 @@ class TransferControllerTest {
                 "Payee Bank",
                 "PayeeBankCode",
                 BigDecimal.valueOf(100.00),
-                LocalDateTime.now()
+                Instant.now().toString()
         );
 
 
@@ -180,7 +180,7 @@ class TransferControllerTest {
                 "Payee Bank",
                 "PayeeBankCode",
                 BigDecimal.valueOf(100.00),
-                LocalDateTime.now()
+                Instant.now().toString()
         );
 
 
@@ -210,7 +210,7 @@ class TransferControllerTest {
                 "Payee Bank",
                 "PayeeBankCode",
                 BigDecimal.valueOf(100.00),
-                LocalDateTime.now()
+                Instant.now().toString()
         );
 
 
@@ -238,7 +238,7 @@ class TransferControllerTest {
                 "Payee Bank",
                 "PayeeBankCode",
                 BigDecimal.valueOf(100.00),
-                LocalDateTime.now()
+                Instant.now().toString()
         );
 
 

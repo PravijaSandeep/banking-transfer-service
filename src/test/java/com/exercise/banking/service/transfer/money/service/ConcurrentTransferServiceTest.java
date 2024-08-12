@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Optional;
@@ -65,7 +66,7 @@ class ConcurrentTransferServiceTest {
 
         UUID requestId = UUID.randomUUID();
         Account payeeAccount = new Account("ACC002", new BigDecimal("200.00"), "Payee1", testBank1, null);
-        TransferRequest request = new TransferRequest(requestId,"ACC001", "ACC002", "testBank1", "testCode1", new BigDecimal("100.00"),LocalDateTime.now());
+        TransferRequest request = new TransferRequest(requestId,"ACC001", "ACC002", "testBank1", "testCode1", new BigDecimal("100.00"),Instant.now().toString());
 
         // Mock repository and service responses
         when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));

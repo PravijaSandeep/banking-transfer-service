@@ -1,10 +1,8 @@
 package com.exercise.banking.service.transfer.money.dto;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -41,9 +39,8 @@ public final class TransferResponse {
     private final String transferType;
     
     @NotNull(message = "The timestamp is required")
-    @Schema(description = "Timestamp", example = "2024-08-11T17:26:13.58163")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
-    private final LocalDateTime timestamp;
+    @Schema(description = "Timestamp in ISO 8601 format", example = "2024-08-11T17:26:13.581630Z")
+    private final String timestamp; 
     
     public TransferResponse(
         UUID requestId,
@@ -52,7 +49,7 @@ public final class TransferResponse {
         BigDecimal balance,
         BigDecimal amount,
         String transferType,
-        LocalDateTime timestamp
+        Instant timestamp
     ) {
         this.requestId = requestId;
         this.transactionId = transactionId;
@@ -61,6 +58,7 @@ public final class TransferResponse {
         this.amount = amount;
         this.transferType = transferType;
         // Set the timestamp to now if it's not provided
-        this.timestamp = (timestamp != null) ? timestamp : LocalDateTime.now();
+        this.timestamp = timestamp != null ? timestamp.toString() : Instant.now().toString();
+
     }
 }

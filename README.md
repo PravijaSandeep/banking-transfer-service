@@ -71,7 +71,7 @@ logging.file.name=logs/app.log
 
 ```bash
   git clone https://github.com/PravijaSandeep/banking-transfer-service.git
-  cd transfer-service
+  cd banking-transfer-service
 ```
 
 ## 2. Build the Application
@@ -89,7 +89,7 @@ mvn spring-boot:run
 ## 3. (Optional) If running using Docker, build Docker Image 
 
 ```bash
-docker build -t transfer-service
+docker build -t transfer-service .
  ```
 
 ## 4. (Optional) Run Docker Container 
@@ -128,12 +128,12 @@ Responses:
 
 {
     "requestId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "transactionId": "56f8bcc0-468d-4a9c-89a7-8a10f7bd4f37",
+    "transactionId": "8559a0c0-a1e6-4543-9395-a1bf093bda3f",
     "status": "SUCCESS",
-    "balance": 900.00,
+    "balance": 800.00,
     "amount": 100,
     "transferType": "IntraBankTransfer",
-    "timestamp": "2024-08-11T18:26:21.551"
+    "timestamp": "2024-08-12T08:35:12.245057Z"
 }
 
 • 400 Bad Request: Insufficient funds
@@ -142,17 +142,17 @@ Responses:
     "requestId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     "status": "BAD_REQUEST",
     "message": "Insufficient funds in account",
-    "timestamp": "2024-08-11T18:25:39.900"
+    "timestamp": "2024-08-12T08:36:05.149401Z"
 }
 
 • 400 Bad Request: Invalid input
 
 {
     "status": "BAD_REQUEST",
-    "message": "Validation error",
-    "timestamp": "2024-08-11T18:25:04.137",
+    "message": "Validation failed for input data",
+    "timestamp": "2024-08-12T08:33:49.016691Z",
     "validationErrors": {
-        "payeeBankName": "Payee bank name is required"
+        "payeeBankCode": "Payee bank code is required"
     }
 }
 
@@ -162,7 +162,7 @@ Responses:
     "requestId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     "status": "NOT_FOUND",
     "message": "Payee not registered",
-    "timestamp": "2024-08-11T18:26:50.243"
+    "timestamp": "2024-08-12T08:34:29.315428Z"
 }
 
 • 500 Internal Server Error: Unexpected error
@@ -171,7 +171,7 @@ Responses:
 	"requestId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
     "status": "INTERNAL_SERVER_ERROR",
     "message": "An unexpected error occurred",
-    "timestamp": "2024-08-11T13:14:04.738955"
+    "timestamp": "2024-08-12T08:34:29.315428Z"
 }
 
 ````

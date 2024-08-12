@@ -1,7 +1,7 @@
 package com.exercise.banking.service.transfer.money.dto;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -17,10 +17,10 @@ import lombok.ToString;
 @Getter
 @ToString
 @Schema(description = "Transfer Request")
-public final class TransferRequest {
-	
-	@NotNull(message = "Request ID is required")
-	@Schema(description = "Request ID", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
+public class TransferRequest { // Remove 'final' modifier
+
+    @NotNull(message = "Request ID is required")
+    @Schema(description = "Request ID", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
     private final UUID requestId;
 
     @NotBlank(message = "Payer account number is required")
@@ -44,8 +44,8 @@ public final class TransferRequest {
     @Schema(description = "Amount to be transferred", example = "100.00")
     private final BigDecimal amount;
     
-    @Schema(description = "Timestamp", example = "2024-08-11T17:26:13.58163")
-    private final LocalDateTime timestamp; 
+    @Schema(description = "Timestamp in ISO 8601 format", example = "2024-08-11T17:26:13.581630Z")
+    private final String timestamp;
 
     @JsonCreator
     public TransferRequest(
@@ -55,7 +55,7 @@ public final class TransferRequest {
         @JsonProperty("payeeBankName") String payeeBankName,
         @JsonProperty("payeeBankCode") String payeeBankCode,
         @JsonProperty("amount") BigDecimal amount,
-        @JsonProperty("timestamp") LocalDateTime timestamp
+        @JsonProperty("timestamp") String timestamp
     ) {
         this.requestId = requestId;
         this.payerAccNumber = payerAccNumber;
@@ -63,6 +63,8 @@ public final class TransferRequest {
         this.payeeBankName = payeeBankName;
         this.payeeBankCode = payeeBankCode;
         this.amount = amount;
-        this.timestamp = timestamp;
+        this.timestamp = timestamp != null ? timestamp : Instant.now().toString();
     }
+
+   
 }

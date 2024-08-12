@@ -1,12 +1,11 @@
 package com.exercise.banking.service.transfer.money.dto;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -30,10 +29,9 @@ public final class ErrorResponse {
 	@Schema(description = "Error message", example = "Insufficient funds in account")
 	private final String message; // The error reason
 	
-	@NotNull(message = "The timestmp is required")
-	@Schema(description = "Timestamp", example = "2024-08-11T17:26:13.58163")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
-	private final LocalDateTime timestamp; 
+	@NotNull(message = "The timestamp is required")
+    @Schema(description = "Timestamp in ISO 8601 format", example = "2024-08-11T17:26:13.581630Z")
+    private final String timestamp; 
 	
 	@Schema(description = "Validation errors", example = """
 			\t{
@@ -48,7 +46,7 @@ public final class ErrorResponse {
 		this.requestId = requestId;
 		this.status = status;
 		this.message = message;
-		this.timestamp = LocalDateTime.now();
+		this.timestamp = Instant.now().toString();
 		this.validationErrors = validationErrors;
 	}
 	

@@ -8,7 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -99,7 +99,7 @@ class TransferServiceTest {
         payerAccount.addPayee(payee1);
         
         Account payeeAccount = new Account("ACC002", new BigDecimal("200.00"), "Payee1", testBank1, null);
-        TransferRequest request = new TransferRequest(requestId,"ACC001", "ACC002", "testBank1", "testCode1", new BigDecimal("100.00"),LocalDateTime.now());
+        TransferRequest request = new TransferRequest(requestId,"ACC001", "ACC002", "testBank1", "testCode1", new BigDecimal("100.00"),Instant.now().toString());
 
         // Mock repository and service responses
         when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
@@ -145,7 +145,7 @@ class TransferServiceTest {
 
 	    Account payeeAccount = new Account("ACC002", new BigDecimal("200.00"), "Payee1", testBank1, null);
 	    TransferRequest request = new TransferRequest(requestId,"ACC001", "ACC002", 
-	    		"testBank1", "testCode1", new BigDecimal("100.00"),LocalDateTime.now());
+	    		"testBank1", "testCode1", new BigDecimal("100.00"),Instant.now().toString());
 
 	    // Mock repository and service responses
 	    when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
@@ -192,7 +192,7 @@ class TransferServiceTest {
         payerAccount.addPayee(payee1);
         
         TransferRequest request = new TransferRequest(requestId,"ACC001", "ACC002", "testBank1", "testCode1", 
-        		new BigDecimal("100.00"),LocalDateTime.now());
+        		new BigDecimal("100.00"),Instant.now().toString());
 
         // Mock repository and service responses
         when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
@@ -225,7 +225,7 @@ class TransferServiceTest {
 		payerAccount.getPayees().add(payee1);
 		
 		TransferRequest request = new TransferRequest(requestId,"ACC001", "ACC003", "testBank2", "testCode2", 
-				new BigDecimal("100.00"),LocalDateTime.now());
+				new BigDecimal("100.00"),Instant.now().toString());
 
 		when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
 		when(accountService.getPayeeByAccountNumbersOrThrow("ACC001", "ACC003","testCode2",requestId))
@@ -266,7 +266,7 @@ class TransferServiceTest {
 
 		Account payerAccount = new Account("ACC001", new BigDecimal("1000.00"), "Payer1", testBank1, new HashSet<>());
 		TransferRequest request = new TransferRequest(requestId,"ACC001", "ACC003", "testBank2", "testCode2", 
-				new BigDecimal("100.00"),LocalDateTime.now());
+				new BigDecimal("100.00"),Instant.now().toString());
 		
 		when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
 		when(accountService.getPayeeByAccountNumbersOrThrow("ACC001", "ACC003","testCode2",requestId))
@@ -288,7 +288,7 @@ class TransferServiceTest {
 
 		Account payerAccount = new Account("ACC001", new BigDecimal("1000.00"), "Payer1", testBank1, new HashSet<>());
 		TransferRequest request = new TransferRequest(UUID.randomUUID(),"ACC001", "ACC001", "testBank1", "testCode1", 
-				new BigDecimal("100.00"),LocalDateTime.now());
+				new BigDecimal("100.00"),Instant.now().toString());
 
 		when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
 		
@@ -303,7 +303,7 @@ class TransferServiceTest {
 		logger.info("#######TEST FOR TRANSFER FROM UNKNWON ACCOUNT ##########");
 
 		TransferRequest request = new TransferRequest(UUID.randomUUID(),"ACC001", "ACC003", "testBank2", "testCode2",
-				new BigDecimal("100.00"),LocalDateTime.now());
+				new BigDecimal("100.00"),Instant.now().toString());
 		assertThrows(AccountNotFoundException.class, () -> intraBankTransferService.performTransfer(request));
 	}
 
@@ -327,7 +327,7 @@ class TransferServiceTest {
 		payerAccount.getPayees().add(payee1);
 
 		TransferRequest request = new TransferRequest(UUID.randomUUID(),"ACC001", "ACC003", "testBank2", "testCode2", 
-				new BigDecimal("100.00"),LocalDateTime.now());
+				new BigDecimal("100.00"),Instant.now().toString());
 
 		when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
 		assertThrows(InsufficientFundsException.class, () -> intraBankTransferService.performTransfer(request));

@@ -1,7 +1,7 @@
 package com.exercise.banking.service.transfer.money.service.impl;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -187,7 +187,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
     			 txn.getPayerAccount().getBalance(),  // balance
     			 txn.getAmount(),
     			 txn.getType(),// transferType
-    			 LocalDateTime.now()
+    			 Instant.now()
          	);
 
     }
