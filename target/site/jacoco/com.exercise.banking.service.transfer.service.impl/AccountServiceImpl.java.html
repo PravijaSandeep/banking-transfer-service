@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AccountServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Money Transfer Service</a> &gt; <a href="index.source.html" class="el_package">com.exercise.banking.service.transfer.service.impl</a> &gt; <span class="el_source">AccountServiceImpl.java</span></div><h1>AccountServiceImpl.java</h1><pre class="source lang-java linenums">package com.exercise.banking.service.transfer.service.impl;
+
+import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import com.exercise.banking.service.transfer.exception.AccountNotFoundException;
+import com.exercise.banking.service.transfer.exception.PayeeNotRegisteredException;
+import com.exercise.banking.service.transfer.model.Account;
+import com.exercise.banking.service.transfer.model.Payee;
+import com.exercise.banking.service.transfer.repository.AccountRepository;
+import com.exercise.banking.service.transfer.repository.PayeeRepository;
+import com.exercise.banking.service.transfer.service.AccountService;
+@Service
+public class AccountServiceImpl implements AccountService{
+
+	private final AccountRepository accRepo;
+	private final PayeeRepository payeeRepo;
+
+<span class="fc" id="L22">	private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);</span>
+
+	
+<span class="fc" id="L25">	public AccountServiceImpl(AccountRepository accRepo, PayeeRepository payeeRepo) {</span>
+<span class="fc" id="L26">		this.accRepo = accRepo;</span>
+<span class="fc" id="L27">		this.payeeRepo = payeeRepo;</span>
+<span class="fc" id="L28">	}</span>
+
+	@Override
+	public Account getAccountByNumberOrThrow(String accountNumber, UUID requestID) {
+<span class="fc" id="L32">		return accRepo.findById(accountNumber)</span>
+<span class="fc" id="L33">				.orElseThrow(() -&gt; new AccountNotFoundException(requestID));</span>
+	}
+
+	/**
+	 * Search for Payee registered by the Payer.
+	 * @param payerAccountNum
+	 * @param payeeAccountNum
+	 * @param requestId 
+	 * @return Optional&lt;Payee&gt; 
+	 */
+	@Override
+	public Payee getPayeeByAccountNumbersOrThrow(String payerAccountNum, String payeeAccountNum, String payeeBankCode, UUID requestId) {
+<span class="fc" id="L45">	    return payeeRepo.findByPayerAccount_AccNumAndAccNum(payerAccountNum, payeeAccountNum)</span>
+<span class="fc" id="L46">	        .filter(payee -&gt; payee.getBank().getCode().equals(payeeBankCode))  // Check the bank code</span>
+<span class="fc" id="L47">	        .orElseThrow(() -&gt; {</span>
+<span class="fc" id="L48">	            logger.error(&quot;Payee not found or bank code does not match for accounts: {} and {} with bank code {}&quot;, </span>
+<span class="fc" id="L49">	                         payerAccountNum, payeeAccountNum, payeeBankCode);</span>
+<span class="fc" id="L50">	            throw new PayeeNotRegisteredException(requestId);</span>
+	        });
+	}
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

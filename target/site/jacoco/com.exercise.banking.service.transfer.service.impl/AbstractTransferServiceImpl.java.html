@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AbstractTransferServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Money Transfer Service</a> &gt; <a href="index.source.html" class="el_package">com.exercise.banking.service.transfer.service.impl</a> &gt; <span class="el_source">AbstractTransferServiceImpl.java</span></div><h1>AbstractTransferServiceImpl.java</h1><pre class="source lang-java linenums">package com.exercise.banking.service.transfer.service.impl;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.exercise.banking.service.transfer.dto.TransferRequest;
+import com.exercise.banking.service.transfer.dto.TransferResponse;
+import com.exercise.banking.service.transfer.exception.AccountNotFoundException;
+import com.exercise.banking.service.transfer.exception.InsufficientFundsException;
+import com.exercise.banking.service.transfer.exception.TransactionProcessingException;
+import com.exercise.banking.service.transfer.model.Account;
+import com.exercise.banking.service.transfer.model.Payee;
+import com.exercise.banking.service.transfer.model.Transaction;
+import com.exercise.banking.service.transfer.model.TransactionStatus;
+import com.exercise.banking.service.transfer.model.TransferType;
+import com.exercise.banking.service.transfer.repository.AccountRepository;
+import com.exercise.banking.service.transfer.repository.TransactionRepository;
+import com.exercise.banking.service.transfer.service.TransferService;
+/**
+ * Abstract Service implementation for Transfer.
+ * 
+ */
+
+public abstract class AbstractTransferServiceImpl implements TransferService {
+
+<span class="fc" id="L30">    private static final Logger logger = LoggerFactory.getLogger(AbstractTransferServiceImpl.class);</span>
+
+    protected final AccountRepository accountRepository;
+    protected final TransactionRepository txnRepository;
+    protected final AccountServiceImpl accountService;
+
+<span class="fc" id="L36">    protected AbstractTransferServiceImpl(AccountRepository accountRepository, TransactionRepository txnRepository, AccountServiceImpl accountService) {</span>
+<span class="fc" id="L37">        this.accountRepository = accountRepository;</span>
+<span class="fc" id="L38">        this.txnRepository = txnRepository;</span>
+<span class="fc" id="L39">        this.accountService = accountService;</span>
+<span class="fc" id="L40">    }</span>
+
+    @Override
+    @Transactional
+    public TransferResponse performTransfer(TransferRequest request) {
+<span class="fc" id="L45">        logger.info(&quot;Started processing transfer for request&quot;);</span>
+<span class="fc" id="L46">        Account payerAccount = findPayerAccount(request);</span>
+<span class="fc" id="L47">        validateRequest(request, payerAccount);</span>
+<span class="fc" id="L48">        Payee payee = findRegisteredPayee(request);</span>
+<span class="fc" id="L49">        Transaction txn = executeTransfer(payerAccount, payee, request);</span>
+<span class="fc" id="L50">        return sendResponse(txn);</span>
+    }
+
+    /**
+     * Validate the request parameters
+     *
+     * @param request
+     * @param payerAccount
+     */
+    private void validateRequest(TransferRequest request, Account payerAccount) {
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (request.getPayerAccNumber().equals(request.getPayeeAccNumber())) {</span>
+<span class="fc" id="L61">            throw new IllegalArgumentException(&quot;Payer and payee accounts cannot be the same.&quot;);</span>
+        }
+<span class="fc" id="L63">        checkBalance(request, payerAccount);</span>
+<span class="fc" id="L64">    }</span>
+
+    /**
+     * Check if the payer account has enough balance to proceed with transfer
+     *
+     * @param request
+     * @param payerAccount
+     */
+    private void checkBalance(TransferRequest request, Account payerAccount) {
+<span class="fc bfc" id="L73" title="All 2 branches covered.">        if (payerAccount.getBalance().compareTo(request.getAmount()) &lt; 0) {</span>
+<span class="fc" id="L74">            logger.error(&quot;Transfer failed: Payer account has insufficient funds. Account balance is {}&quot;, payerAccount.getBalance());</span>
+<span class="fc" id="L75">            throw new InsufficientFundsException(request.getRequestId());</span>
+        }
+<span class="fc" id="L77">    }</span>
+
+    /**
+     * Find and returns the registered Payee for the Payer account
+     *
+     * @param request
+     * @return registered payee
+     */
+    private Payee findRegisteredPayee(TransferRequest request) {
+<span class="fc" id="L86">        logger.info(&quot;Finding the registered Payee&quot;);</span>
+<span class="fc" id="L87">        Payee payee = accountService.getPayeeByAccountNumbersOrThrow(request.getPayerAccNumber(), request.getPayeeAccNumber(),request.getPayeeBankCode(),request.getRequestId());</span>
+<span class="fc" id="L88">        logger.debug(&quot;Registered Payee found is {}&quot;, payee.getName());</span>
+<span class="fc" id="L89">        return payee;</span>
+    }
+
+    /**
+     * Finds the Payer account matching to the request
+     *
+     * @param request
+     * @return
+     */
+    private Account findPayerAccount(TransferRequest request) {
+<span class="fc" id="L99">        return accountRepository.findById(request.getPayerAccNumber())</span>
+<span class="fc" id="L100">                .orElseThrow(() -&gt; </span>
+<span class="fc" id="L101">                     new AccountNotFoundException(request.getRequestId())</span>
+                );
+    }
+
+    /**
+     * Persists the transaction.
+     *
+     * @param payerAccount the payer's account
+     * @param payee the payee's account
+     * @param amount the amount to transfer
+     * @param type the type of transfer (intra-bank or inter-bank)
+     * @param requestId 
+     * @return the saved Transaction object
+     */
+    protected Transaction recordTransaction(Account payerAccount, Payee payee, TransferRequest request,TransferType type) {
+<span class="fc" id="L116">        Transaction transaction = createTransaction(payerAccount, payee, request, type.getValue());</span>
+        try {
+            // Update the payer account balance
+<span class="fc" id="L119">            updatePayerAccountBalance(payerAccount, request.getAmount());</span>
+
+            // Save the transaction with status &quot;Success&quot;
+<span class="fc" id="L122">            transaction.setStatus(TransactionStatus.SUCCESS);</span>
+<span class="fc" id="L123">            transaction = txnRepository.save(transaction);</span>
+
+<span class="fc" id="L125">            logger.info(&quot;Transaction {} recorded successfully&quot;, transaction.getTransactionId());</span>
+<span class="fc" id="L126">            return transaction;</span>
+
+<span class="fc" id="L128">        } catch (Exception e) {</span>
+            // If any error occurs, log the exception
+<span class="fc" id="L130">            logger.error(&quot;Transaction failed due to exception {}&quot;, e.getMessage(), e);</span>
+
+            // Set the transaction status to &quot;Failure&quot;
+<span class="fc" id="L133">            transaction.setStatus(TransactionStatus.FAILURE);</span>
+<span class="fc" id="L134">            txnRepository.save(transaction); // Save the failed transaction</span>
+
+<span class="fc" id="L136">            throw new TransactionProcessingException(request.getRequestId(),e.getMessage());</span>
+        }
+    }
+    
+    /**
+     * Creates the Transaction for the request
+     * @param payerAccount
+     * @param payee
+     * @param request
+     * @param type
+     * @return
+     */
+	protected Transaction createTransaction(Account payerAccount, Payee payee, TransferRequest request,String type) {
+		// Record the transaction
+<span class="fc" id="L150">		 Transaction txn = new Transaction(</span>
+<span class="fc" id="L151">                null,  // ID will be auto-generated</span>
+<span class="fc" id="L152">                request.getRequestId(),</span>
+<span class="fc" id="L153">                payerAccount,</span>
+<span class="fc" id="L154">                payee,</span>
+<span class="fc" id="L155">                request.getAmount(),</span>
+<span class="fc" id="L156">                request.getCurrency(),</span>
+<span class="fc" id="L157">                null,  // Timestamp will be set automatically</span>
+<span class="fc" id="L158">                TransactionStatus.PENDING,</span>
+<span class="fc" id="L159">                type</span>
+               );
+		 
+<span class="fc" id="L162">		 logger.info(&quot;Request txn : {}&quot;, txn.getCurrency());</span>
+<span class="fc" id="L163">		 return txn;</span>
+	}
+
+    /**
+     * Updates Payer Account balance
+     * @param payerAccount
+     * @param amount
+     */
+	private synchronized void updatePayerAccountBalance(Account payerAccount, BigDecimal amount) {
+<span class="fc" id="L172">		logger.info(&quot;Debiting {} from payer Account with balance: {}&quot;, amount,  payerAccount.getBalance());</span>
+<span class="fc" id="L173">        BigDecimal balance = payerAccount.getBalance().subtract(amount);</span>
+<span class="fc" id="L174">        logger.info(&quot;Updating balance to '{}'.&quot;, balance);</span>
+
+<span class="fc" id="L176">        payerAccount.setBalance(balance);</span>
+<span class="fc" id="L177">        accountRepository.save(payerAccount);</span>
+<span class="fc" id="L178">	}</span>
+	
+	 /**
+     * Sends the response for Transfer request.
+     *
+     * @param payerBalance
+     * @param transferredAmount
+     * @return
+     */
+    private TransferResponse sendResponse(Transaction txn) {
+        
+<span class="fc" id="L189">    	return new TransferResponse.Builder()</span>
+<span class="fc" id="L190">    		    .withRequestId(txn.getRequestId())  // original request id</span>
+<span class="fc" id="L191">    		    .withTransactionId(txn.getTransactionId())  // transactionId</span>
+<span class="fc" id="L192">    		    .withStatus(txn.getStatus().name())  // status</span>
+<span class="fc" id="L193">    		    .withBalance(txn.getPayerAccount().getBalance())  // balance</span>
+<span class="fc" id="L194">    		    .withAmount(txn.getAmount())</span>
+<span class="fc" id="L195">    		    .withCurrency(txn.getCurrency())</span>
+<span class="fc" id="L196">    		    .withTransferType(txn.getType())  // transferType</span>
+<span class="fc" id="L197">    		    .withTimestamp(Instant.now())  // current timestamp</span>
+<span class="fc" id="L198">    		    .build();</span>
+
+    }
+
+    /**
+     * Execute the transfer based on transfer type identified
+     * @param payerAccount
+     * @param payee
+     * @param request
+     * @return Completed Transaction
+     */
+    protected abstract Transaction executeTransfer(Account payerAccount, Payee payee, TransferRequest request);
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

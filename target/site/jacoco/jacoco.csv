@@ -1,7 +1,0 @@
-GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
-Money Transfer Service,com.exercise.banking.service.transfer.service.impl,IntraBankTransferService,0,84,0,0,0,19,0,6,0,6
-Money Transfer Service,com.exercise.banking.service.transfer.service.impl,AccountServiceImpl,0,71,0,0,0,13,0,7,0,7
-Money Transfer Service,com.exercise.banking.service.transfer.service.impl,AbstractTransferServiceImpl,0,242,0,4,0,66,0,14,0,12
-Money Transfer Service,com.exercise.banking.service.transfer.service.impl,InterBankTransferService,0,32,0,0,0,8,0,3,0,3
-Money Transfer Service,com.exercise.banking.service.transfer.controller,TransferController,0,41,0,0,0,11,0,3,0,3
-Money Transfer Service,com.exercise.banking.service.transfer.service,TransferServiceSelector,0,36,0,4,0,12,0,5,0,3
