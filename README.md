@@ -205,11 +205,66 @@ mvn jacoco:report
 ```
 
 
+## Limitations
+
+This project facilitates the transfer of money between predefined accounts. Any account or payee outside of this predefined set will not be recognized and the transfer will fail.
+
+
+### Predefined accounts
+
+Account 1: 
+    Account Holder : Person1,
+    Account Num : 123456,
+    Bank code : A00001,
+    Bank Name : BANK_A,
+    Payees : Payee1 and Payee 2
+
+Account 2: 
+    Account Holder : Person2,
+    Account Num : 789123,
+    Bank code : A00001,
+    Bank Name : BANK_A,
+    Payees : None
+
+Account 2: 
+    Account Holder : Person3,
+    Account Num : 978654,
+    Bank code : A00001,
+    Bank Name : BANK_A,
+    Payees : Payee 3
+    
+
+### Predefined Payees
+
+Payee 1: 
+    Name : Person1-Payee1,
+    Account Num : 978654,
+    Type : INTRA_BANK Payee,
+    Bank : BANK_A,
+    Bank Code : A00001
+
+Payee 2: 
+    Name : Person1-Payee2,
+    Account Num : 654321,
+    Type : INTER_BANK Payee,
+    Bank : BANK_B,
+    Bank code : B00001
+
+Payee 3:
+    Name : Person3-Payee1,
+    Account Num : 654321,
+    Type : INTER_BANK Payee,
+    Bank : BANK_B,
+    Bank code : B00001
+
+
+
+
+
 ## Roadmap
 
 - Implement custom logic for transaction id generation.
-- Integrate with real account database and read accounts. Currently it is using a small preloaded configutaion for accounts.
-
+- Integrate with real account database and read accounts. Currently it is using a small pre-loaded configuration for accounts.
 - Integrate with a real payment gateway for external transfers.
 
 

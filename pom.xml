@@ -12,7 +12,7 @@
 	<artifactId>money-transfer-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Money Transfer Service</name>
-	<description>Excercise project for banking Amount transfer service</description>
+	<description>Exercise project for banking Amount transfer service</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -38,26 +38,15 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
     		<groupId>org.projectlombok</groupId>
     		<artifactId>lombok</artifactId>
     		<scope>provided</scope>
-		</dependency>
-		<dependency>
-    		<groupId>org.springframework.boot</groupId>
-    		<artifactId>spring-boot-starter-test</artifactId>
-    		<scope>test</scope>
 		</dependency>
 		<dependency>
     		<groupId>org.springframework.boot</groupId>
@@ -72,7 +61,11 @@
     		<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
     		<version>2.1.0</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -99,15 +92,13 @@
                     	</goals>
                     	<configuration>
                         <excludes>
-                            <!-- Exclude entire packages -->
-                            <exclude>**/com/exercise/banking/service/transfer/money/config/**</exclude>
-                            <exclude>**/com/exercise/banking/service/transfer/money/dto/**</exclude>
-                            <exclude>**/com/exercise/banking/service/transfer/money/exception/**</exclude>
-                            <exclude>**/com/exercise/banking/service/transfer/money/model/**</exclude>
-                            <!-- Exclude specific classes -->
-                            <exclude>**/com/exercise/banking/service/transfer/money/MoneyTransferApplication**</exclude>
-                            
-                            <!-- Exclude classes by name pattern -->
+                            <exclude>com/exercise/banking/service/transfer/config/*</exclude>
+							<exclude>com/exercise/banking/service/transfer/dto/*</exclude>
+							<exclude>com/exercise/banking/service/transfer/exception/*</exclude>
+							<exclude>com/exercise/banking/service/transfer/model/*</exclude>
+
+                            <exclude>com/exercise/banking/service/transfer/MoneyTransferApplication.class</exclude>
+
                             <exclude>**/*Test*.*</exclude> <!-- Excludes all test classes -->
                         </excludes>
                     </configuration>

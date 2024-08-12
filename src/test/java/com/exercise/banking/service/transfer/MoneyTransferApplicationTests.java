@@ -8,8 +8,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-import com.exercise.banking.service.transfer.money.MoneyTransferApplication;
-
 
 @SpringJUnitConfig
 @ContextConfiguration(classes = MoneyTransferApplication.class)
