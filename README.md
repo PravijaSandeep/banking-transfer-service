@@ -1,7 +1,7 @@
 
 # Transfer Service
 
-The Transfer Service is a Spring Boot application designed to handle money transfers between bank accounts. The service supports both intra-bank and inter-bank transfers and includes robust error handling, validation, and logging. This works with preloaded account configuration (see Limitaion section below). 
+The Transfer Service is a Spring Boot application designed to handle money transfers between bank accounts. The service supports both intra-bank and inter-bank transfers and includes robust error handling, validation, and logging. This works with preloaded account configuration (see Limitation section below). 
 
 
 
