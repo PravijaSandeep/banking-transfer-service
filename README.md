@@ -78,8 +78,12 @@ logging.file.name=logs/app.log
 
 ```bash
   git clone https://github.com/PravijaSandeep/banking-transfer-service.git
+```
+
+```bash
   cd banking-transfer-service
 ```
+
 
 ## 2. Build the Application
 
