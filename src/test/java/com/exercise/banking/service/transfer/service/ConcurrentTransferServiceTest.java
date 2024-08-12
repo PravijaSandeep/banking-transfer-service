@@ -78,7 +78,7 @@ class ConcurrentTransferServiceTest {
 
         // Run concurrent transfers using CompletableFuture
         CompletableFuture<TransferResponseV1>[] futures = IntStream.range(0, 10)
-                .mapToObj(i -> CompletableFuture.supplyAsync(() -> intraBankTransferService.performTransfer1(request)))
+                .mapToObj(i -> CompletableFuture.supplyAsync(() -> intraBankTransferService.performTransferV1(request)))
                 .toArray(CompletableFuture[]::new);
 
         // Wait for all futures to complete and assert results

@@ -97,7 +97,7 @@ class SuccessTransferServiceTest {
 		when(txnRepo.save(any(Transaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
 		// Perform transfer
-		CompletableFuture<TransferResponseV1> future = CompletableFuture.supplyAsync(() -> svc.performTransfer1(request));
+		CompletableFuture<TransferResponseV1> future = CompletableFuture.supplyAsync(() -> svc.performTransferV1(request));
 		TransferResponseV1 response = future.get();
 
 		// Assert that the transfer was successful

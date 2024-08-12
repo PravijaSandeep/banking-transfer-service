@@ -10,5 +10,5 @@ public interface TransferService {
 	 * @param transferRequest
 	 * @return response object
 	 */
-	TransferResponseV1 performTransfer1(TransferRequestV1 transferRequest);
+	TransferResponseV1 performTransferV1(TransferRequestV1 transferRequest);
 }

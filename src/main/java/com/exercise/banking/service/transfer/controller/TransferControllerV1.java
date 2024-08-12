@@ -78,7 +78,7 @@ public class TransferControllerV1 {
 
     		TransferService service = transferServiceSelector.getService(config.getBankCode(), request.getPayeeBankCode());
 
-    		TransferResponseV1 response = service.performTransfer1(request);
+    		TransferResponseV1 response = service.performTransferV1(request);
     		return ResponseEntity.ok(response);
     	}finally {
     		// Ensure to clear the MDC after the request is processed

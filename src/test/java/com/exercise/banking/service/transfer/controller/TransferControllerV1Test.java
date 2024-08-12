@@ -106,7 +106,7 @@ class TransferControllerV1Test {
 
 
         // Mock the behavior of performTransfer
-        when(transferService.performTransfer1(any(TransferRequestV1.class)))
+        when(transferService.performTransferV1(any(TransferRequestV1.class)))
                 .thenReturn(transferResponse);
 
         // When & Then
@@ -161,7 +161,7 @@ class TransferControllerV1Test {
 
 
     	// Mock the behavior of performTransfer
-         when(transferService.performTransfer1(any(TransferRequestV1.class))).thenThrow(new AccountNotFoundException(requestID));
+         when(transferService.performTransferV1(any(TransferRequestV1.class))).thenThrow(new AccountNotFoundException(requestID));
 
       
 
@@ -191,7 +191,7 @@ class TransferControllerV1Test {
 
 
     	// Mock the behavior of performTransfer
-         when(transferService.performTransfer1(any(TransferRequestV1.class))).thenThrow(new InsufficientFundsException(requestID));
+         when(transferService.performTransferV1(any(TransferRequestV1.class))).thenThrow(new InsufficientFundsException(requestID));
 
       
 
@@ -221,7 +221,7 @@ class TransferControllerV1Test {
         );
 
     	// Mock the behavior of performTransfer
-         when(transferService.performTransfer1(any(TransferRequestV1.class))).thenThrow(new PayeeNotRegisteredException(requestID));
+         when(transferService.performTransferV1(any(TransferRequestV1.class))).thenThrow(new PayeeNotRegisteredException(requestID));
 
          // Then: perform the request and expect a 404 response with the error message
          mockMvc.perform(post(TRANSFER_API)
@@ -249,7 +249,7 @@ class TransferControllerV1Test {
 
 
     	// Mock the behavior of performTransfer
-         when(transferService.performTransfer1(any(TransferRequestV1.class))).thenThrow(new PayeeNotRegisteredException(requestID));
+         when(transferService.performTransferV1(any(TransferRequestV1.class))).thenThrow(new PayeeNotRegisteredException(requestID));
 
       
 
@@ -280,7 +280,7 @@ class TransferControllerV1Test {
 
 
     	// Mock the behavior of performTransfer
-         when(transferService.performTransfer1(any(TransferRequestV1.class))).thenThrow(new PayeeNotRegisteredException(requestID));
+         when(transferService.performTransferV1(any(TransferRequestV1.class))).thenThrow(new PayeeNotRegisteredException(requestID));
 
          // Then: perform the request and expect a 404 response with the error message
          mockMvc.perform(post(TRANSFER_API)
@@ -312,7 +312,7 @@ class TransferControllerV1Test {
 
 
     	// Mock the behavior of performTransfer
-         when(transferService.performTransfer1(any(TransferRequestV1.class))).thenThrow(new RuntimeException("Unknown Error"));
+         when(transferService.performTransferV1(any(TransferRequestV1.class))).thenThrow(new RuntimeException("Unknown Error"));
 
          // Then: perform the request and expect a 404 response with the error message
          mockMvc.perform(post(TRANSFER_API)

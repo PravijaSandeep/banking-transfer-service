@@ -41,7 +41,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
 
     @Override
     @Transactional
-    public TransferResponseV1 performTransfer1(TransferRequestV1 request) {
+    public TransferResponseV1 performTransferV1(TransferRequestV1 request) {
         logger.info("Started processing transfer for request");
         Account payerAccount = findPayerAccount(request);
         validateRequest(request, payerAccount);
