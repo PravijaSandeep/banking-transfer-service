@@ -14,6 +14,7 @@ import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.exercise.banking.service.transfer.dto.ErrorResponse;
 
@@ -88,6 +89,14 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.UNSUPPORTED_MEDIA_TYPE);
     }
     
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFoundException(NoResourceFoundException ex) {
+        logger.error("Resource not found: {}", ex.getMessage());
+    	String message = messageSource.getMessage("error.resource.notfound", null, LocaleContextHolder.getLocale());
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.NOT_FOUND, message);
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
     /**
      * Logs the error in logs with request Id
      * @param msg

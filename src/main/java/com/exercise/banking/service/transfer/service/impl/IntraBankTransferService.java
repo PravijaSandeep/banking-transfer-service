@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import com.exercise.banking.service.transfer.dto.TransferRequest;
+import com.exercise.banking.service.transfer.dto.TransferRequestV1;
 import com.exercise.banking.service.transfer.exception.AccountNotFoundException;
 import com.exercise.banking.service.transfer.model.Account;
 import com.exercise.banking.service.transfer.model.Payee;
@@ -28,7 +28,7 @@ public class IntraBankTransferService extends AbstractTransferServiceImpl {
 	}
 
 	@Override
-	protected synchronized Transaction executeTransfer(Account payerAccount, Payee payee, TransferRequest request) throws AccountNotFoundException {
+	protected synchronized Transaction executeTransfer(Account payerAccount, Payee payee, TransferRequestV1 request) throws AccountNotFoundException {
 		logger.debug("Trying to execute intra-bank transfer");
 		BigDecimal amount = request.getAmount();
 		Account payeeAccount = getPayeeAccount(request.getPayeeAccNumber(),request.getRequestId());

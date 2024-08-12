@@ -25,8 +25,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.exercise.banking.service.transfer.config.BankConfiguration;
-import com.exercise.banking.service.transfer.dto.TransferRequest;
-import com.exercise.banking.service.transfer.dto.TransferResponse;
+import com.exercise.banking.service.transfer.dto.TransferRequestV1;
+import com.exercise.banking.service.transfer.dto.TransferResponseV1;
 import com.exercise.banking.service.transfer.exception.AccountNotFoundException;
 import com.exercise.banking.service.transfer.exception.InsufficientFundsException;
 import com.exercise.banking.service.transfer.exception.PayeeNotRegisteredException;
@@ -36,10 +36,10 @@ import com.exercise.banking.service.transfer.service.TransferServiceSelector;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-@WebMvcTest(TransferController.class)
-class TransferControllerTest {
+@WebMvcTest(TransferControllerV1.class)
+class TransferControllerV1Test {
 	
-	private static final Logger logger = LoggerFactory.getLogger(TransferControllerTest.class);
+	private static final Logger logger = LoggerFactory.getLogger(TransferControllerV1Test.class);
 
     @Autowired
     private MockMvc mockMvc;
@@ -54,6 +54,8 @@ class TransferControllerTest {
     private TransferService transferService;
     
     private ObjectMapper objectMapper;
+    
+    private static final String TRANSFER_API = "/api/v1/transfers";
 
     @BeforeEach
     void setUp() {
@@ -75,7 +77,7 @@ class TransferControllerTest {
     void testSuccessTransfer() throws Exception {
         // Given
     	UUID requestid = UUID.randomUUID();
-        TransferRequest transferRequest = new TransferRequest(
+        TransferRequestV1 transferRequest = new TransferRequestV1(
         		requestid,
                 "1234567",
                 "987654",
@@ -91,7 +93,7 @@ class TransferControllerTest {
         logger.info("TxnId: {}",txnId);
         logger.info("RequestId: {}",requestid);
 
-        TransferResponse transferResponse = new TransferResponse.Builder()
+        TransferResponseV1 transferResponse = new TransferResponseV1.Builder()
         	    .withRequestId(requestid)  
         	    .withTransactionId(txnId)  
         	    .withStatus("SUCCESS")  
@@ -104,11 +106,11 @@ class TransferControllerTest {
 
 
         // Mock the behavior of performTransfer
-        when(transferService.performTransfer(any(TransferRequest.class)))
+        when(transferService.performTransfer1(any(TransferRequestV1.class)))
                 .thenReturn(transferResponse);
 
         // When & Then
-        mockMvc.perform(post("/api/transfers")
+        mockMvc.perform(post(TRANSFER_API)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(asJsonString(transferRequest)))
                 .andExpect(status().isOk())
@@ -123,7 +125,7 @@ class TransferControllerTest {
     @Test
     void testValidationFailure() throws Exception {
         // Given
-        TransferRequest transferRequest = new TransferRequest(
+        TransferRequestV1 transferRequest = new TransferRequestV1(
         		UUID.randomUUID(),
                 "1234567",
                 "987654",
@@ -136,7 +138,7 @@ class TransferControllerTest {
 
 
         // When & Then
-        mockMvc.perform(post("/api/transfers")
+        mockMvc.perform(post(TRANSFER_API)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(asJsonString(transferRequest)))
                 .andExpect(status().is4xxClientError());
@@ -146,7 +148,7 @@ class TransferControllerTest {
     void testTransferWithInvalidAccount() throws Exception {
     	
     	UUID requestID = UUID.randomUUID();
-    	TransferRequest transferRequest = new TransferRequest(
+    	TransferRequestV1 transferRequest = new TransferRequestV1(
     			UUID.randomUUID(),
                 "1234567",
                 "987654",
@@ -159,12 +161,12 @@ class TransferControllerTest {
 
 
     	// Mock the behavior of performTransfer
-         when(transferService.performTransfer(any(TransferRequest.class))).thenThrow(new AccountNotFoundException(requestID));
+         when(transferService.performTransfer1(any(TransferRequestV1.class))).thenThrow(new AccountNotFoundException(requestID));
 
       
 
          // Then: perform the request and expect a 404 response with the error message
-         mockMvc.perform(post("/api/transfers")
+         mockMvc.perform(post(TRANSFER_API)
                  .contentType(MediaType.APPLICATION_JSON)
                  .content(asJsonString(transferRequest)))
              	 .andExpect(status().isNotFound())
@@ -176,7 +178,7 @@ class TransferControllerTest {
     void testTransferFromInSufficientFund() throws Exception {
     	
     	UUID requestID = UUID.randomUUID();
-    	TransferRequest transferRequest = new TransferRequest(
+    	TransferRequestV1 transferRequest = new TransferRequestV1(
     			requestID,
                 "1234567",
                 "987654",
@@ -189,12 +191,12 @@ class TransferControllerTest {
 
 
     	// Mock the behavior of performTransfer
-         when(transferService.performTransfer(any(TransferRequest.class))).thenThrow(new InsufficientFundsException(requestID));
+         when(transferService.performTransfer1(any(TransferRequestV1.class))).thenThrow(new InsufficientFundsException(requestID));
 
       
 
          // Then: perform the request and expect a 404 response with the error message
-         mockMvc.perform(post("/api/transfers")
+         mockMvc.perform(post(TRANSFER_API)
                  .contentType(MediaType.APPLICATION_JSON)
                  .content(asJsonString(transferRequest)))
              	 .andExpect(status().isBadRequest())
@@ -207,7 +209,7 @@ class TransferControllerTest {
     void testTransferToUnknownPayee() throws Exception {
     	
     	UUID requestID = UUID.randomUUID();
-    	TransferRequest transferRequest = new TransferRequest(
+    	TransferRequestV1 transferRequest = new TransferRequestV1(
     			requestID,
                 "1234567",
                 "987654",
@@ -219,10 +221,10 @@ class TransferControllerTest {
         );
 
     	// Mock the behavior of performTransfer
-         when(transferService.performTransfer(any(TransferRequest.class))).thenThrow(new PayeeNotRegisteredException(requestID));
+         when(transferService.performTransfer1(any(TransferRequestV1.class))).thenThrow(new PayeeNotRegisteredException(requestID));
 
          // Then: perform the request and expect a 404 response with the error message
-         mockMvc.perform(post("/api/transfers")
+         mockMvc.perform(post(TRANSFER_API)
                  .contentType(MediaType.APPLICATION_JSON)
                  .content(asJsonString(transferRequest)))
              	 .andExpect(status().isNotFound())
@@ -234,7 +236,7 @@ class TransferControllerTest {
     void testTransferWithInvalidCurrency() throws Exception {
     	
     	UUID requestID = UUID.randomUUID();
-    	TransferRequest transferRequest = new TransferRequest(
+    	TransferRequestV1 transferRequest = new TransferRequestV1(
     			requestID,
                 "1234567",
                 "987654",
@@ -247,12 +249,12 @@ class TransferControllerTest {
 
 
     	// Mock the behavior of performTransfer
-         when(transferService.performTransfer(any(TransferRequest.class))).thenThrow(new PayeeNotRegisteredException(requestID));
+         when(transferService.performTransfer1(any(TransferRequestV1.class))).thenThrow(new PayeeNotRegisteredException(requestID));
 
       
 
          // Then: perform the request and expect a 404 response with the error message
-         mockMvc.perform(post("/api/transfers")
+         mockMvc.perform(post(TRANSFER_API)
                  .contentType(MediaType.APPLICATION_JSON)
                  .content(asJsonString(transferRequest)))
              	 .andExpect(status().isBadRequest())
@@ -265,7 +267,7 @@ class TransferControllerTest {
     void testTransferWithOutOfRangeValues() throws Exception {
     	
     	UUID requestID = UUID.randomUUID();
-    	TransferRequest transferRequest = new TransferRequest(
+    	TransferRequestV1 transferRequest = new TransferRequestV1(
     			requestID,
                 "123",
                 "9876543218956432",
@@ -278,10 +280,10 @@ class TransferControllerTest {
 
 
     	// Mock the behavior of performTransfer
-         when(transferService.performTransfer(any(TransferRequest.class))).thenThrow(new PayeeNotRegisteredException(requestID));
+         when(transferService.performTransfer1(any(TransferRequestV1.class))).thenThrow(new PayeeNotRegisteredException(requestID));
 
          // Then: perform the request and expect a 404 response with the error message
-         mockMvc.perform(post("/api/transfers")
+         mockMvc.perform(post(TRANSFER_API)
                  .contentType(MediaType.APPLICATION_JSON)
                  .content(asJsonString(transferRequest)))
              	 .andExpect(status().isBadRequest())
@@ -297,7 +299,7 @@ class TransferControllerTest {
     @Test
     void testTransferGeneralException() throws Exception {
     	
-    	TransferRequest transferRequest = new TransferRequest(
+    	TransferRequestV1 transferRequest = new TransferRequestV1(
     			UUID.randomUUID(),
                 "1234567",
                 "987654",
@@ -310,10 +312,10 @@ class TransferControllerTest {
 
 
     	// Mock the behavior of performTransfer
-         when(transferService.performTransfer(any(TransferRequest.class))).thenThrow(new RuntimeException("Unknown Error"));
+         when(transferService.performTransfer1(any(TransferRequestV1.class))).thenThrow(new RuntimeException("Unknown Error"));
 
          // Then: perform the request and expect a 404 response with the error message
-         mockMvc.perform(post("/api/transfers")
+         mockMvc.perform(post(TRANSFER_API)
                  .contentType(MediaType.APPLICATION_JSON)
                  .content(asJsonString(transferRequest)))
              	 .andExpect(status().is5xxServerError())

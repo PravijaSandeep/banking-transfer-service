@@ -14,7 +14,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @Schema(description = "Transfer Response")
-public final class TransferResponse {
+public final class TransferResponseV1 {
     
     @NotNull(message = "Request ID is required")
     @Schema(description = "Request ID", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
@@ -50,7 +50,7 @@ public final class TransferResponse {
     private final String timestamp; 
 
     // Private constructor to force usage of the builder
-    private TransferResponse(Builder builder) {
+    private TransferResponseV1(Builder builder) {
         this.requestId = builder.requestId;
         this.transactionId = builder.transactionId;
         this.status = builder.status;
@@ -111,8 +111,8 @@ public final class TransferResponse {
             return this;
         }
 
-        public TransferResponse build() {
-            return new TransferResponse(this);
+        public TransferResponseV1 build() {
+            return new TransferResponseV1(this);
         }
     }
 }

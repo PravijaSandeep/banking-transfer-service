@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.exercise.banking.service.transfer.config.BankConfiguration;
 import com.exercise.banking.service.transfer.dto.ErrorResponse;
-import com.exercise.banking.service.transfer.dto.TransferRequest;
-import com.exercise.banking.service.transfer.dto.TransferResponse;
+import com.exercise.banking.service.transfer.dto.TransferRequestV1;
+import com.exercise.banking.service.transfer.dto.TransferResponseV1;
 import com.exercise.banking.service.transfer.service.TransferService;
 import com.exercise.banking.service.transfer.service.TransferServiceSelector;
 
@@ -28,29 +28,29 @@ import jakarta.validation.Valid;
 
 @RestController
 @Validated
-@RequestMapping(value = "/api/transfers", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/api/v1/transfers", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Transfer Service", description = "Money transfer related operations")
-public class TransferController {
+public class TransferControllerV1 {
 
-    private static final Logger logger = LoggerFactory.getLogger(TransferController.class);
+    private static final Logger logger = LoggerFactory.getLogger(TransferControllerV1.class);
 
     private final TransferServiceSelector transferServiceSelector;
     private final BankConfiguration config;
 
-    public TransferController(TransferServiceSelector transferServiceSelector, BankConfiguration config) {
+    public TransferControllerV1(TransferServiceSelector transferServiceSelector, BankConfiguration config) {
         this.transferServiceSelector = transferServiceSelector;
         this.config = config;
     }
 
     @PostMapping
     @Operation(
-        summary = "Transfer money between accounts", 
-        description = "Performs a money transfer between payer and payee accounts",
+        summary = "Transfer money between accounts (v1)", 
+        description = "Performs a money transfer between payer and payee accounts for version 1 API",
         responses = {
             @ApiResponse(
                 responseCode = "200", 
                 description = "Transfer Successful", 
-                content = @Content(schema = @Schema(implementation = TransferResponse.class))
+                content = @Content(schema = @Schema(implementation = TransferResponseV1.class))
             ),
             @ApiResponse(
                 responseCode = "400", 
@@ -69,7 +69,7 @@ public class TransferController {
             )
         }
     )
-    public ResponseEntity<TransferResponse> transfer(@Valid @RequestBody TransferRequest request, HttpServletRequest httpServletRequest) {
+    public ResponseEntity<TransferResponseV1> transfer(@Valid @RequestBody TransferRequestV1 request, HttpServletRequest httpServletRequest) {
     	
     	MDC.put("requestId", request.getRequestId().toString()); // add requestId to MDC, so that it is available in all current request log lines.
     	try {
@@ -78,7 +78,7 @@ public class TransferController {
 
     		TransferService service = transferServiceSelector.getService(config.getBankCode(), request.getPayeeBankCode());
 
-    		TransferResponse response = service.performTransfer(request);
+    		TransferResponseV1 response = service.performTransfer1(request);
     		return ResponseEntity.ok(response);
     	}finally {
     		// Ensure to clear the MDC after the request is processed

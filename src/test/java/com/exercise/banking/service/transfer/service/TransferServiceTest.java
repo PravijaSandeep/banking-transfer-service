@@ -27,8 +27,8 @@ import org.slf4j.MDC;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.exercise.banking.service.transfer.dto.TransferRequest;
-import com.exercise.banking.service.transfer.dto.TransferResponse;
+import com.exercise.banking.service.transfer.dto.TransferRequestV1;
+import com.exercise.banking.service.transfer.dto.TransferResponseV1;
 import com.exercise.banking.service.transfer.exception.AccountNotFoundException;
 import com.exercise.banking.service.transfer.exception.InsufficientFundsException;
 import com.exercise.banking.service.transfer.exception.PayeeNotRegisteredException;
@@ -99,7 +99,7 @@ class TransferServiceTest {
         payerAccount.addPayee(payee1);
         
         Account payeeAccount = new Account("ACC002", new BigDecimal("200.00"), "Payee1", testBank1, null);
-        TransferRequest request = new TransferRequest(requestId,"ACC001", "ACC002", "testBank1", "testCode1", new BigDecimal("100.00"),"GBP",Instant.now().toString());
+        TransferRequestV1 request = new TransferRequestV1(requestId,"ACC001", "ACC002", "testBank1", "testCode1", new BigDecimal("100.00"),"GBP",Instant.now().toString());
 
         // Mock repository and service responses
         when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
@@ -120,7 +120,7 @@ class TransferServiceTest {
         when(txnRepo.save(any(Transaction.class))).thenReturn(mockTransaction);
 
         // Execute the transfer
-        TransferResponse response = intraBankTransferService.performTransfer(request);
+        TransferResponseV1 response = intraBankTransferService.performTransfer1(request);
 
         // Assertions
         assertEquals("SUCCESS", response.getStatus());
@@ -146,7 +146,7 @@ class TransferServiceTest {
 	    
 
 	    Account payeeAccount = new Account("ACC002", new BigDecimal("200.00"), "Payee1", testBank1, null);
-	    TransferRequest request = new TransferRequest(requestId,"ACC001", "ACC002", 
+	    TransferRequestV1 request = new TransferRequestV1(requestId,"ACC001", "ACC002", 
 	    		"testBank1", "testCode1", new BigDecimal("100.00"),"EUR",Instant.now().toString());
 
 	    // Mock repository and service responses
@@ -163,7 +163,7 @@ class TransferServiceTest {
 	    when(accRepo.save(any(Account.class))).thenThrow(new RuntimeException("Simulated database failure"));
 
 	    // Execute the transfer and expect a TransactionProcessingException
-	    assertThrows(TransactionProcessingException.class, () -> intraBankTransferService.performTransfer(request));
+	    assertThrows(TransactionProcessingException.class, () -> intraBankTransferService.performTransfer1(request));
 
 	    // Capture the Transaction object that was passed to save()
 	    ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);
@@ -193,7 +193,7 @@ class TransferServiceTest {
         Payee payee1 = new Payee(null, "Person1-Payee1", "ACC002",testBank1, payerAccount);
         payerAccount.addPayee(payee1);
         
-        TransferRequest request = new TransferRequest(requestId,"ACC001", "ACC002", "testBank1", "testCode1", 
+        TransferRequestV1 request = new TransferRequestV1(requestId,"ACC001", "ACC002", "testBank1", "testCode1", 
         		new BigDecimal("100.00"),"GBP",Instant.now().toString());
 
         // Mock repository and service responses
@@ -202,7 +202,7 @@ class TransferServiceTest {
         
         when(accountService.getPayeeByAccountNumbersOrThrow("ACC001", "ACC002","testCode1",requestId)).thenReturn(payee1);
         
-        assertThrows(AccountNotFoundException.class, () -> intraBankTransferService.performTransfer(request));
+        assertThrows(AccountNotFoundException.class, () -> intraBankTransferService.performTransfer1(request));
     }
 
 	@Test
@@ -226,7 +226,7 @@ class TransferServiceTest {
 		Payee payee1 = new Payee(null, "Person1-Payee1", "ACC003",  testBank2, payerAccount);
 		payerAccount.getPayees().add(payee1);
 		
-		TransferRequest request = new TransferRequest(requestId,"ACC001", "ACC003", "testBank2", "testCode2", 
+		TransferRequestV1 request = new TransferRequestV1(requestId,"ACC001", "ACC003", "testBank2", "testCode2", 
 				new BigDecimal("100.00"),"EUR",Instant.now().toString());
 
 		when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
@@ -245,7 +245,7 @@ class TransferServiceTest {
         // Mock the save behavior of the repository
         when(txnRepo.save(any(Transaction.class))).thenReturn(mockTransaction);
 
-		TransferResponse response = interBankTransferService.performTransfer(request);
+		TransferResponseV1 response = interBankTransferService.performTransfer1(request);
 		assertEquals(requestId,response.getRequestId());
 		assertEquals(new BigDecimal("900.00"),response.getBalance());
 		assertEquals(new BigDecimal("100.00"),response.getAmount());
@@ -269,14 +269,14 @@ class TransferServiceTest {
 		testBank2.setName("testBank2");
 
 		Account payerAccount = new Account("ACC001", new BigDecimal("1000.00"), "Payer1", testBank1, new HashSet<>());
-		TransferRequest request = new TransferRequest(requestId,"ACC001", "ACC003", "testBank2", "testCode2", 
+		TransferRequestV1 request = new TransferRequestV1(requestId,"ACC001", "ACC003", "testBank2", "testCode2", 
 				new BigDecimal("100.00"),"GBP",Instant.now().toString());
 		
 		when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
 		when(accountService.getPayeeByAccountNumbersOrThrow("ACC001", "ACC003","testCode2",requestId))
         .thenThrow(new PayeeNotRegisteredException(requestId));
 
-		assertThrows(PayeeNotRegisteredException.class, () -> intraBankTransferService.performTransfer(request));
+		assertThrows(PayeeNotRegisteredException.class, () -> intraBankTransferService.performTransfer1(request));
 
 	}
 	
@@ -291,13 +291,13 @@ class TransferServiceTest {
 		testBank1.setName("testBank1");
 
 		Account payerAccount = new Account("ACC001", new BigDecimal("1000.00"), "Payer1", testBank1, new HashSet<>());
-		TransferRequest request = new TransferRequest(UUID.randomUUID(),"ACC001", "ACC001", "testBank1", "testCode1", 
+		TransferRequestV1 request = new TransferRequestV1(UUID.randomUUID(),"ACC001", "ACC001", "testBank1", "testCode1", 
 				new BigDecimal("100.00"),"GBP",Instant.now().toString());
 
 		when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
 		
 
-		assertThrows(IllegalArgumentException.class, () -> intraBankTransferService.performTransfer(request));
+		assertThrows(IllegalArgumentException.class, () -> intraBankTransferService.performTransfer1(request));
 
 	}
 
@@ -306,9 +306,9 @@ class TransferServiceTest {
 	void testTransferFromUnknownAccount() {
 		logger.info("#######TEST FOR TRANSFER FROM UNKNWON ACCOUNT ##########");
 
-		TransferRequest request = new TransferRequest(UUID.randomUUID(),"ACC001", "ACC003", "testBank2", "testCode2",
+		TransferRequestV1 request = new TransferRequestV1(UUID.randomUUID(),"ACC001", "ACC003", "testBank2", "testCode2",
 				new BigDecimal("100.00"),"GBP",Instant.now().toString());
-		assertThrows(AccountNotFoundException.class, () -> intraBankTransferService.performTransfer(request));
+		assertThrows(AccountNotFoundException.class, () -> intraBankTransferService.performTransfer1(request));
 	}
 
 	@Test
@@ -330,11 +330,11 @@ class TransferServiceTest {
 		Payee payee1 = new Payee(null, "Person1-Payee1", "ACC003",   testBank2, payerAccount);
 		payerAccount.getPayees().add(payee1);
 
-		TransferRequest request = new TransferRequest(UUID.randomUUID(),"ACC001", "ACC003", "testBank2", "testCode2", 
+		TransferRequestV1 request = new TransferRequestV1(UUID.randomUUID(),"ACC001", "ACC003", "testBank2", "testCode2", 
 				new BigDecimal("100.00"),"GBP",Instant.now().toString());
 
 		when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
-		assertThrows(InsufficientFundsException.class, () -> intraBankTransferService.performTransfer(request));
+		assertThrows(InsufficientFundsException.class, () -> intraBankTransferService.performTransfer1(request));
 
 	}
 	

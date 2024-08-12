@@ -11,9 +11,9 @@ import com.exercise.banking.service.transfer.service.impl.IntraBankTransferServi
 public class TransferServiceSelector {
 <span class="fc" id="L12">	private static final Logger logger = LoggerFactory.getLogger(TransferServiceSelector.class);</span>
 
-	private final InterBankTransferService interBankSvc;
+	private final TransferService interBankSvc;
 	
-	private final IntraBankTransferService intraBankSvc;
+	private final TransferService intraBankSvc;
 	
 <span class="fc" id="L18">	public TransferServiceSelector(InterBankTransferService interBankSvc,IntraBankTransferService intraBankSvc) {</span>
 <span class="fc" id="L19">		this.interBankSvc = interBankSvc;</span>

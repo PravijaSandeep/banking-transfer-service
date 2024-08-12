@@ -13,6 +13,7 @@ The Transfer Service is a Spring Boot application designed to handle money trans
 - OpenAPI Documentation: Provides API documentation using OpenAPI (Swagger).
 - Docker Support: Can be containerised using Docker for easy deployment.
 - Localization: Error messages can be localized using message properties.
+- API Versioning: API is versioned, to ensure backward compatibility while allowing for future improvements (Implemented with URI versioning)
 
 
 
@@ -104,10 +105,15 @@ docker run -p 8080:8080 transfer-service
 
 ## API Reference
 
-#### Transfer money from payer acount to payee account
+### Transfer money from payer account to payee account
+
+#### Available Versions
+
+##### Version 1 (v1)
+
 
 ```http
-  POST /api/transfers
+  POST /api/v1/transfers
   Consumes: application/json
   Produces: application/json
 
@@ -165,6 +171,15 @@ Responses:
     "message": "Payee not registered",
     "timestamp": "2024-08-12T08:34:29.315428Z"
 }
+
+• 404 Not Found: The requested resource was not found
+
+{
+    "status": "NOT_FOUND",
+    "message": "The requested resource was not found",
+    "timestamp": "2024-08-12T20:19:51.985907Z"
+}
+
 
 • 500 Internal Server Error: Unexpected error
 

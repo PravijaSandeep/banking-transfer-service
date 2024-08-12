@@ -19,8 +19,8 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.exercise.banking.service.transfer.dto.TransferRequest;
-import com.exercise.banking.service.transfer.dto.TransferResponse;
+import com.exercise.banking.service.transfer.dto.TransferRequestV1;
+import com.exercise.banking.service.transfer.dto.TransferResponseV1;
 import com.exercise.banking.service.transfer.model.Account;
 import com.exercise.banking.service.transfer.model.Bank;
 import com.exercise.banking.service.transfer.model.Payee;
@@ -84,7 +84,7 @@ class SuccessTransferServiceTest {
 
 		UUID requestId = UUID.randomUUID();
 		Account payeeAccount = new Account(payeeAccNumber, new BigDecimal("200.00"), "Payee1", payeeBank, null);
-		TransferRequest request = new TransferRequest(requestId, payerAccNumber, payeeAccNumber, payeeBankName,
+		TransferRequestV1 request = new TransferRequestV1(requestId, payerAccNumber, payeeAccNumber, payeeBankName,
 				payeeBankCode, amount, currency, Instant.now().toString());
 
 		// Mock repository and service responses
@@ -97,8 +97,8 @@ class SuccessTransferServiceTest {
 		when(txnRepo.save(any(Transaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
 		// Perform transfer
-		CompletableFuture<TransferResponse> future = CompletableFuture.supplyAsync(() -> svc.performTransfer(request));
-		TransferResponse response = future.get();
+		CompletableFuture<TransferResponseV1> future = CompletableFuture.supplyAsync(() -> svc.performTransfer1(request));
+		TransferResponseV1 response = future.get();
 
 		// Assert that the transfer was successful
 		assertEquals("SUCCESS", response.getStatus());

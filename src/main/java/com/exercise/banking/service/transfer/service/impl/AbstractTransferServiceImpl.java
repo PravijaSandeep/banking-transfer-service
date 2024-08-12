@@ -7,8 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.exercise.banking.service.transfer.dto.TransferRequest;
-import com.exercise.banking.service.transfer.dto.TransferResponse;
+import com.exercise.banking.service.transfer.dto.TransferRequestV1;
+import com.exercise.banking.service.transfer.dto.TransferResponseV1;
 import com.exercise.banking.service.transfer.exception.AccountNotFoundException;
 import com.exercise.banking.service.transfer.exception.InsufficientFundsException;
 import com.exercise.banking.service.transfer.exception.TransactionProcessingException;
@@ -41,7 +41,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
 
     @Override
     @Transactional
-    public TransferResponse performTransfer(TransferRequest request) {
+    public TransferResponseV1 performTransfer1(TransferRequestV1 request) {
         logger.info("Started processing transfer for request");
         Account payerAccount = findPayerAccount(request);
         validateRequest(request, payerAccount);
@@ -56,7 +56,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param request
      * @param payerAccount
      */
-    private void validateRequest(TransferRequest request, Account payerAccount) {
+    private void validateRequest(TransferRequestV1 request, Account payerAccount) {
         if (request.getPayerAccNumber().equals(request.getPayeeAccNumber())) {
             throw new IllegalArgumentException("Payer and payee accounts cannot be the same.");
         }
@@ -69,7 +69,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param request
      * @param payerAccount
      */
-    private void checkBalance(TransferRequest request, Account payerAccount) {
+    private void checkBalance(TransferRequestV1 request, Account payerAccount) {
         if (payerAccount.getBalance().compareTo(request.getAmount()) < 0) {
             logger.error("Transfer failed: Payer account has insufficient funds. Account balance is {}", payerAccount.getBalance());
             throw new InsufficientFundsException(request.getRequestId());
@@ -82,7 +82,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param request
      * @return registered payee
      */
-    private Payee findRegisteredPayee(TransferRequest request) {
+    private Payee findRegisteredPayee(TransferRequestV1 request) {
         logger.info("Finding the registered Payee");
         Payee payee = accountService.getPayeeByAccountNumbersOrThrow(request.getPayerAccNumber(), request.getPayeeAccNumber(),request.getPayeeBankCode(),request.getRequestId());
         logger.debug("Registered Payee found is {}", payee.getName());
@@ -95,7 +95,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param request
      * @return
      */
-    private Account findPayerAccount(TransferRequest request) {
+    private Account findPayerAccount(TransferRequestV1 request) {
         return accountRepository.findById(request.getPayerAccNumber())
                 .orElseThrow(() -> 
                      new AccountNotFoundException(request.getRequestId())
@@ -112,7 +112,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param requestId 
      * @return the saved Transaction object
      */
-    protected Transaction recordTransaction(Account payerAccount, Payee payee, TransferRequest request,TransferType type) {
+    protected Transaction recordTransaction(Account payerAccount, Payee payee, TransferRequestV1 request,TransferType type) {
         Transaction transaction = createTransaction(payerAccount, payee, request, type.getValue());
         try {
             // Update the payer account balance
@@ -145,7 +145,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param type
      * @return
      */
-	protected Transaction createTransaction(Account payerAccount, Payee payee, TransferRequest request,String type) {
+	protected Transaction createTransaction(Account payerAccount, Payee payee, TransferRequestV1 request,String type) {
 		// Record the transaction
 		 Transaction txn = new Transaction(
                 null,  // ID will be auto-generated
@@ -184,9 +184,9 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param transferredAmount
      * @return
      */
-    private TransferResponse sendResponse(Transaction txn) {
+    private TransferResponseV1 sendResponse(Transaction txn) {
         
-    	return new TransferResponse.Builder()
+    	return new TransferResponseV1.Builder()
     		    .withRequestId(txn.getRequestId())  // original request id
     		    .withTransactionId(txn.getTransactionId())  // transactionId
     		    .withStatus(txn.getStatus().name())  // status
@@ -206,5 +206,5 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param request
      * @return Completed Transaction
      */
-    protected abstract Transaction executeTransfer(Account payerAccount, Payee payee, TransferRequest request);
+    protected abstract Transaction executeTransfer(Account payerAccount, Payee payee, TransferRequestV1 request);
 }

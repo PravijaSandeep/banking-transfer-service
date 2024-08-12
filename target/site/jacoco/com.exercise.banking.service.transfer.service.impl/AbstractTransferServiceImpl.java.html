@@ -7,8 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.exercise.banking.service.transfer.dto.TransferRequest;
-import com.exercise.banking.service.transfer.dto.TransferResponse;
+import com.exercise.banking.service.transfer.dto.TransferRequestV1;
+import com.exercise.banking.service.transfer.dto.TransferResponseV1;
 import com.exercise.banking.service.transfer.exception.AccountNotFoundException;
 import com.exercise.banking.service.transfer.exception.InsufficientFundsException;
 import com.exercise.banking.service.transfer.exception.TransactionProcessingException;
@@ -41,7 +41,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
 
     @Override
     @Transactional
-    public TransferResponse performTransfer(TransferRequest request) {
+    public TransferResponseV1 performTransfer1(TransferRequestV1 request) {
 <span class="fc" id="L45">        logger.info(&quot;Started processing transfer for request&quot;);</span>
 <span class="fc" id="L46">        Account payerAccount = findPayerAccount(request);</span>
 <span class="fc" id="L47">        validateRequest(request, payerAccount);</span>
@@ -56,7 +56,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param request
      * @param payerAccount
      */
-    private void validateRequest(TransferRequest request, Account payerAccount) {
+    private void validateRequest(TransferRequestV1 request, Account payerAccount) {
 <span class="fc bfc" id="L60" title="All 2 branches covered.">        if (request.getPayerAccNumber().equals(request.getPayeeAccNumber())) {</span>
 <span class="fc" id="L61">            throw new IllegalArgumentException(&quot;Payer and payee accounts cannot be the same.&quot;);</span>
         }
@@ -69,7 +69,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param request
      * @param payerAccount
      */
-    private void checkBalance(TransferRequest request, Account payerAccount) {
+    private void checkBalance(TransferRequestV1 request, Account payerAccount) {
 <span class="fc bfc" id="L73" title="All 2 branches covered.">        if (payerAccount.getBalance().compareTo(request.getAmount()) &lt; 0) {</span>
 <span class="fc" id="L74">            logger.error(&quot;Transfer failed: Payer account has insufficient funds. Account balance is {}&quot;, payerAccount.getBalance());</span>
 <span class="fc" id="L75">            throw new InsufficientFundsException(request.getRequestId());</span>
@@ -82,7 +82,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param request
      * @return registered payee
      */
-    private Payee findRegisteredPayee(TransferRequest request) {
+    private Payee findRegisteredPayee(TransferRequestV1 request) {
 <span class="fc" id="L86">        logger.info(&quot;Finding the registered Payee&quot;);</span>
 <span class="fc" id="L87">        Payee payee = accountService.getPayeeByAccountNumbersOrThrow(request.getPayerAccNumber(), request.getPayeeAccNumber(),request.getPayeeBankCode(),request.getRequestId());</span>
 <span class="fc" id="L88">        logger.debug(&quot;Registered Payee found is {}&quot;, payee.getName());</span>
@@ -95,7 +95,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param request
      * @return
      */
-    private Account findPayerAccount(TransferRequest request) {
+    private Account findPayerAccount(TransferRequestV1 request) {
 <span class="fc" id="L99">        return accountRepository.findById(request.getPayerAccNumber())</span>
 <span class="fc" id="L100">                .orElseThrow(() -&gt; </span>
 <span class="fc" id="L101">                     new AccountNotFoundException(request.getRequestId())</span>
@@ -112,7 +112,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param requestId 
      * @return the saved Transaction object
      */
-    protected Transaction recordTransaction(Account payerAccount, Payee payee, TransferRequest request,TransferType type) {
+    protected Transaction recordTransaction(Account payerAccount, Payee payee, TransferRequestV1 request,TransferType type) {
 <span class="fc" id="L116">        Transaction transaction = createTransaction(payerAccount, payee, request, type.getValue());</span>
         try {
             // Update the payer account balance
@@ -145,18 +145,18 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param type
      * @return
      */
-	protected Transaction createTransaction(Account payerAccount, Payee payee, TransferRequest request,String type) {
+	protected Transaction createTransaction(Account payerAccount, Payee payee, TransferRequestV1 request,String type) {
 		// Record the transaction
 <span class="fc" id="L150">		 Transaction txn = new Transaction(</span>
-<span class="fc" id="L151">                null,  // ID will be auto-generated</span>
+                null,  // ID will be auto-generated
 <span class="fc" id="L152">                request.getRequestId(),</span>
-<span class="fc" id="L153">                payerAccount,</span>
-<span class="fc" id="L154">                payee,</span>
+                payerAccount,
+                payee,
 <span class="fc" id="L155">                request.getAmount(),</span>
 <span class="fc" id="L156">                request.getCurrency(),</span>
-<span class="fc" id="L157">                null,  // Timestamp will be set automatically</span>
-<span class="fc" id="L158">                TransactionStatus.PENDING,</span>
-<span class="fc" id="L159">                type</span>
+                null,  // Timestamp will be set automatically
+                TransactionStatus.PENDING,
+                type
                );
 		 
 <span class="fc" id="L162">		 logger.info(&quot;Request txn : {}&quot;, txn.getCurrency());</span>
@@ -184,9 +184,9 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param transferredAmount
      * @return
      */
-    private TransferResponse sendResponse(Transaction txn) {
+    private TransferResponseV1 sendResponse(Transaction txn) {
         
-<span class="fc" id="L189">    	return new TransferResponse.Builder()</span>
+<span class="fc" id="L189">    	return new TransferResponseV1.Builder()</span>
 <span class="fc" id="L190">    		    .withRequestId(txn.getRequestId())  // original request id</span>
 <span class="fc" id="L191">    		    .withTransactionId(txn.getTransactionId())  // transactionId</span>
 <span class="fc" id="L192">    		    .withStatus(txn.getStatus().name())  // status</span>
@@ -206,6 +206,6 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param request
      * @return Completed Transaction
      */
-    protected abstract Transaction executeTransfer(Account payerAccount, Payee payee, TransferRequest request);
+    protected abstract Transaction executeTransfer(Account payerAccount, Payee payee, TransferRequestV1 request);
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

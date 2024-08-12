@@ -21,8 +21,8 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.exercise.banking.service.transfer.dto.TransferRequest;
-import com.exercise.banking.service.transfer.dto.TransferResponse;
+import com.exercise.banking.service.transfer.dto.TransferRequestV1;
+import com.exercise.banking.service.transfer.dto.TransferResponseV1;
 import com.exercise.banking.service.transfer.model.Account;
 import com.exercise.banking.service.transfer.model.Bank;
 import com.exercise.banking.service.transfer.model.Payee;
@@ -66,7 +66,7 @@ class ConcurrentTransferServiceTest {
 
         UUID requestId = UUID.randomUUID();
         Account payeeAccount = new Account("ACC002", new BigDecimal("200.00"), "Payee1", testBank1, null);
-        TransferRequest request = new TransferRequest(requestId, "ACC001", "ACC002", "testBank1", "testCode1", new BigDecimal("100.00"), "GBP", Instant.now().toString());
+        TransferRequestV1 request = new TransferRequestV1(requestId, "ACC001", "ACC002", "testBank1", "testCode1", new BigDecimal("100.00"), "GBP", Instant.now().toString());
 
         // Mock repository and service responses
         when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
@@ -77,8 +77,8 @@ class ConcurrentTransferServiceTest {
         when(txnRepo.save(any(Transaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Run concurrent transfers using CompletableFuture
-        CompletableFuture<TransferResponse>[] futures = IntStream.range(0, 10)
-                .mapToObj(i -> CompletableFuture.supplyAsync(() -> intraBankTransferService.performTransfer(request)))
+        CompletableFuture<TransferResponseV1>[] futures = IntStream.range(0, 10)
+                .mapToObj(i -> CompletableFuture.supplyAsync(() -> intraBankTransferService.performTransfer1(request)))
                 .toArray(CompletableFuture[]::new);
 
         // Wait for all futures to complete and assert results

@@ -1,7 +1,7 @@
 package com.exercise.banking.service.transfer.service;
 
-import com.exercise.banking.service.transfer.dto.TransferRequest;
-import com.exercise.banking.service.transfer.dto.TransferResponse;
+import com.exercise.banking.service.transfer.dto.TransferRequestV1;
+import com.exercise.banking.service.transfer.dto.TransferResponseV1;
 
 
 public interface TransferService {
@@ -10,5 +10,5 @@ public interface TransferService {
 	 * @param transferRequest
 	 * @return response object
 	 */
-	TransferResponse performTransfer(TransferRequest transferRequest);
+	TransferResponseV1 performTransfer1(TransferRequestV1 transferRequest);
 }

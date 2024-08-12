@@ -19,7 +19,7 @@ import lombok.ToString;
 @Getter
 @ToString
 @Schema(description = "Transfer Request")
-public class TransferRequest { // Remove 'final' modifier
+public class TransferRequestV1 { // Remove 'final' modifier
 
     @NotNull(message = "Request ID is required")
     @Schema(description = "Request ID", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
@@ -57,7 +57,7 @@ public class TransferRequest { // Remove 'final' modifier
     private final String timestamp;
 
     @JsonCreator
-    public TransferRequest(
+    public TransferRequestV1(
         @JsonProperty("requestId") UUID requestId,
         @JsonProperty("payerAccNumber") String payerAccNumber,
         @JsonProperty("payeeAccNumber") String payeeAccNumber,
