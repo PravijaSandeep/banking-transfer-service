@@ -47,6 +47,8 @@ The Transfer Service is a Spring Boot application designed to handle money trans
 
 ## Design
 
+This is the sequence diagram that illustrates the money transfer between intra-bank accounts:
+
 
 ![bLH1Ri8m4Bpx5IjEGO92UyoXed2gAXL4w0FSU8Ei9hQxTf3uVUsGW0bfHM_nxinuPhtAmZfEhgvAndEd2Jui4ZE-97Dfk78msX5Nja1QQUL8boNI2BY5ot4OdY4TP8uPbXY46qvt-9FH8fllQ-1BdkjQkIqQRQMNEJRGg3gWwrD9hNgKNeUna1gcpr6e53RhR0SpRkJiy3XphKVBBf1](https://github.com/user-attachments/assets/b273bc1d-713f-487b-9b63-3c2b11a112ce)
 
