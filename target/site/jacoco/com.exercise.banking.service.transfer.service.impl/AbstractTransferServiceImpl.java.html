@@ -35,8 +35,8 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
     protected final TransactionRepository txnRepository;
     protected final AccountServiceImpl accountService;
 
-<span class="fc" id="L38">    protected AbstractTransferServiceImpl(AccountRepository accountRepository, TransactionRepository txnRepository,</span>
-    		AccountServiceImpl accountService) {
+    protected AbstractTransferServiceImpl(AccountRepository accountRepository, TransactionRepository txnRepository,
+<span class="fc" id="L39">    		AccountServiceImpl accountService) {</span>
 <span class="fc" id="L40">        this.accountRepository = accountRepository;</span>
 <span class="fc" id="L41">        this.txnRepository = txnRepository;</span>
 <span class="fc" id="L42">        this.accountService = accountService;</span>
@@ -54,7 +54,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
 <span class="fc" id="L54">    		isDuplicate = true;</span>
 <span class="fc" id="L55">    		logger.info(&quot;Duplicate transaction {} detected with request id{}. Sending the previously processed transaction details&quot;,</span>
 <span class="fc" id="L56">    				txn.getTransactionId(),txn.getRequestId());</span>
-<span class="fc" id="L57">    	}else {</span>
+    	}else {
 <span class="fc" id="L58">    		txn = executeTransfer(fetchAndValidatePayerAccount(request),</span>
 <span class="fc" id="L59">    				findRegisteredPayee(request), request);</span>
     	}
@@ -181,15 +181,15 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
 	protected Transaction createTransaction(Account payerAccount, Payee payee, TransferRequestV1 request,String type) {
 		// Record the transaction
 <span class="fc" id="L183">		 Transaction txn = new Transaction(</span>
-<span class="fc" id="L184">                null,  // ID will be auto-generated</span>
+                null,  // ID will be auto-generated
 <span class="fc" id="L185">                request.getRequestId(),</span>
-<span class="fc" id="L186">                payerAccount,</span>
-<span class="fc" id="L187">                payee,</span>
+                payerAccount,
+                payee,
 <span class="fc" id="L188">                request.getAmount(),</span>
 <span class="fc" id="L189">                request.getCurrency(),</span>
-<span class="fc" id="L190">                null,  // Timestamp will be set automatically</span>
-<span class="fc" id="L191">                TransactionStatus.PENDING,</span>
-<span class="fc" id="L192">                type</span>
+                null,  // Timestamp will be set automatically
+                TransactionStatus.PENDING,
+                type
                );
 		 
 <span class="fc" id="L195">		 logger.info(&quot;Request txn : {}&quot;, txn.getCurrency());</span>

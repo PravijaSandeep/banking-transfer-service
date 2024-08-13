@@ -54,25 +54,6 @@ This is the sequence diagram that illustrates the money transfer between intra-b
 ![bLH1Ri8m4Bpx5IjEGO92UyoXed2gAXL4w0FSU8Ei9hQxTf3uVUsGW0bfHM_nxinuPhtAmZfEhgvAndEd2Jui4ZE-97Dfk78msX5Nja1QQUL8boNI2BY5ot4OdY4TP8uPbXY46qvt-9FH8fllQ-1BdkjQkIqQRQMNEJRGg3gWwrD9hNgKNeUna1gcpr6e53RhR0SpRkJiy3XphKVBBf1](https://github.com/user-attachments/assets/b273bc1d-713f-487b-9b63-3c2b11a112ce)
 
 
-
-## Application Properties
-
-Application-specific properties can be set in src/main/resources/application.properties:
-
-```bash
-# application.properties
-logging.level.org.hibernate.SQL=DEBUG
-logging.level.org.hibernate.type.descriptor.sql.BasicBinder=TRACE
-
-transfer.source.bank.name=BANK_A
-transfer.source.bank.code=A00001
-
-logging.level.com.exercise.banking=DEBUG
-logging.file.name=logs/app.log
-
-```
-
-
 ## Installation
 
 ## 1. Clone the Repository
@@ -228,6 +209,44 @@ Responses:
 After running the application, you can access the API documentation [here:](http://localhost:8080/swagger-ui/index.html)
 
 
+## API Health and Information
+
+This application provides endpoints for monitoring the health status and retrieving application information through Spring Boot Actuator.
+
+### Health Check Endpoint
+
+The health check endpoint is used to verify the overall status of the application. It checks various indicators like database connectivity, disk space, and other custom health indicators.
+
+- **URL:** `/actuator/health`
+- **Method:** `GET`
+- **Response Example:**
+
+```json
+  {
+    "status": "UP"
+  }
+```
+
+### Information Endpoint
+
+The information endpoint provides details about the application, such as the version, description, and any other custom information provided by the InfoContributor.
+
+- **URL:** `/actuator/info`
+- **Method:** `GET`
+- **Response Example:**
+
+```json
+ {
+  "application": {
+    "app": "Banking Transfer Service",
+    "version": "1.0.0",
+    "description": "API for transferring money between accounts"
+  }
+}
+
+```
+
+
 ## Localization
 
 The error response messages stored in src/main/resources/messages.properties and can be localized by adding additional messages_{locale}.properties files.
@@ -325,8 +344,9 @@ Payee 3:
 
 ## Future Tasks
 
+- Implement user authentication and secure message processing.
 - Implement custom logic for transaction ID generation.
-- Implement an audit trail mechanism for all requests.
+- Implement audit trails functionality for all requests.
 - Integrate with real account database and read accounts. Currently, it is using a small pre-loaded configuration for accounts.
 - Integrate with a real payment gateway for external transfers.
 

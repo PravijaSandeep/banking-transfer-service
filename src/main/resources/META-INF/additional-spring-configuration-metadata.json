@@ -1,0 +1,27 @@
+{"properties": [
+  {
+    "name": "transfer.source.bank.name",
+    "type": "java.lang.String",
+    "description": "This is the field for specifying the source bank name"
+  },
+  {
+    "name": "transfer.source.bank.code",
+    "type": "java.lang.String",
+    "description": "This is the field for specifying the source bank code'"
+  },
+  {
+    "name": "app.name",
+    "type": "java.lang.String",
+    "description": "Application name'"
+  },
+  {
+    "name": "app.version",
+    "type": "java.lang.String",
+    "description": "Application version'"
+  },
+  {
+    "name": "app.description",
+    "type": "java.lang.String",
+    "description": "Describes the application details'"
+  }
+]}
