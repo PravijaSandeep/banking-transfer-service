@@ -26,7 +26,7 @@ public class InterBankTransferService extends  AbstractTransferServiceImpl{
 
 	@Override
 	protected Transaction executeTransfer(Account payerAccount, Payee payee, TransferRequestV1 request) {
-		logger.info("Executing intra-bank transfer");
+		logger.info("Executing inter-bank transfer");
 		Transaction txn = recordTransaction(payerAccount, payee,request,TransferType.INTER_BANK_TRANSFER);
 
 		// TODO call the other bank service API
