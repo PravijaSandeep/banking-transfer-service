@@ -148,15 +148,15 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
 	protected Transaction createTransaction(Account payerAccount, Payee payee, TransferRequestV1 request,String type) {
 		// Record the transaction
 <span class="fc" id="L150">		 Transaction txn = new Transaction(</span>
-<span class="fc" id="L151">                null,  // ID will be auto-generated</span>
+                null,  // ID will be auto-generated
 <span class="fc" id="L152">                request.getRequestId(),</span>
-<span class="fc" id="L153">                payerAccount,</span>
-<span class="fc" id="L154">                payee,</span>
+                payerAccount,
+                payee,
 <span class="fc" id="L155">                request.getAmount(),</span>
 <span class="fc" id="L156">                request.getCurrency(),</span>
-<span class="fc" id="L157">                null,  // Timestamp will be set automatically</span>
-<span class="fc" id="L158">                TransactionStatus.PENDING,</span>
-<span class="fc" id="L159">                type</span>
+                null,  // Timestamp will be set automatically
+                TransactionStatus.PENDING,
+                type
                );
 		 
 <span class="fc" id="L162">		 logger.info(&quot;Request txn : {}&quot;, txn.getCurrency());</span>

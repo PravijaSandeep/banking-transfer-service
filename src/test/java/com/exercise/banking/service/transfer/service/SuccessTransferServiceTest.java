@@ -6,7 +6,9 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.EnumMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -50,9 +52,18 @@ class SuccessTransferServiceTest {
 	@BeforeEach
 	public void setUp() {
 		MockitoAnnotations.openMocks(this);
-		IntraBankTransferService intraBankSvc = new IntraBankTransferService(accRepo, txnRepo, accountService);
+		// Create the EnumMap with the mocked services
+        Map<TransferType, TransferService> services = new EnumMap<>(TransferType.class);
+        
+        IntraBankTransferService intraBankSvc = new IntraBankTransferService(accRepo, txnRepo, accountService);
 		InterBankTransferService interBankSvc = new InterBankTransferService(accRepo, txnRepo, accountService);
-		selector = new TransferServiceSelector(interBankSvc, intraBankSvc);
+		
+        services.put(TransferType.INTER_BANK_TRANSFER, interBankSvc);
+        services.put(TransferType.INTRA_BANK_TRANSFER, intraBankSvc);
+
+        // Create the TransferServiceSelector instance
+        selector = new TransferServiceSelector(services);
+        
 	}
 
 	@ParameterizedTest
