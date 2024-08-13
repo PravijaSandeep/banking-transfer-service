@@ -11,10 +11,10 @@ The Transfer Service is a Spring Boot application designed to handle money trans
 - Error Handling: Global exception handling for common errors like account not found, insufficient funds, and unregistered payees.
 - Validation: Comprehensive input validation for all transfer requests.
 - OpenAPI Documentation: Provides API documentation using OpenAPI (Swagger).
-- Docker Support: Can be containerised using Docker for easy deployment.
+- Docker Support: Can be containerized using Docker for easy deployment.
 - Localization: Error messages can be localized using message properties.
 - API Versioning: API is versioned, to ensure backward compatibility while allowing for future improvements (Implemented with URI versioning)
-- Idempotent API: To avoid duplicate processing, the transfer service api is made idempotent. It will return the old transaction if the request id was processed earlier. The response will indicate it's a duplicate transaction or not.
+- Idempotent API: To avoid duplicate processing, the transfer service API is made idempotent. It will return the old transaction if the request-id was processed earlier. The response will indicate whether it's a duplicate transaction or not.
 
 
 
@@ -325,8 +325,9 @@ Payee 3:
 
 ## Future Tasks
 
-- Implement custom logic for transaction id generation.
-- Integrate with real account database and read accounts. Currently it is using a small pre-loaded configuration for accounts.
+- Implement custom logic for transaction ID generation.
+- Implement an audit trail mechanism for all requests.
+- Integrate with real account database and read accounts. Currently, it is using a small pre-loaded configuration for accounts.
 - Integrate with a real payment gateway for external transfers.
 
 
