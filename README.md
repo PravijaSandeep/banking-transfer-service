@@ -229,6 +229,25 @@ Generate Test Coverage Report
 mvn jacoco:report
 ```
 
+## Database
+
+H2 in-memory database is used for development and testing. The database schema is automatically created at runtime based on the JPA entities.
+
+## Error Handling
+
+The application uses a centralized exception handling mechanism through a global exception handler. The error responses are standardized and returned in JSON format.
+Example error response:
+
+```
+• 404 Not Found: Account or Payee not found
+
+{
+    "requestId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "status": "NOT_FOUND",
+    "message": "Payee not registered",
+    "timestamp": "2024-08-12T08:34:29.315428Z"
+}
+```
 
 ## Limitations
 
