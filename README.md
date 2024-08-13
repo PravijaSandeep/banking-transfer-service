@@ -14,6 +14,7 @@ The Transfer Service is a Spring Boot application designed to handle money trans
 - Docker Support: Can be containerised using Docker for easy deployment.
 - Localization: Error messages can be localized using message properties.
 - API Versioning: API is versioned, to ensure backward compatibility while allowing for future improvements (Implemented with URI versioning)
+- Idempotent API: To avoid duplicate processing, the transfer service api is made idempotent. It will return the old transaction if the request id was processed earlier. The response will indicate it's a duplicate transaction or not.
 
 
 
@@ -143,14 +144,31 @@ Responses:
 • 200 OK: Transfer successful
 
 {
-    "requestId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "transactionId": "8559a0c0-a1e6-4543-9395-a1bf093bda3f",
-    "status": "SUCCESS",
-    "balance": 800.00,
-    "amount": 100,
-    "transferType": "IntraBankTransfer",
-    "timestamp": "2024-08-12T08:35:12.245057Z"
+  "requestId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "transactionId": "6e4e876e-f0f5-4c0c-b88f-1d672171814e",
+  "status": "SUCCESS",
+  "balance": 900,
+  "amount": 100,
+  "currency": "GBP",
+  "transferType": "IntraBankTransfer",
+  "timestamp": "2024-08-13T16:17:59.489450Z",
+  "duplicate": false
 }
+
+• 200 OK: Transfer successful, for a duplicate transaction.
+
+{
+  "requestId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "transactionId": "6e4e876e-f0f5-4c0c-b88f-1d672171814e",
+  "status": "SUCCESS",
+  "balance": 900,
+  "amount": 100,
+  "currency": "GBP",
+  "transferType": "IntraBankTransfer",
+  "timestamp": "2024-08-13T16:18:52.627107Z",
+  "duplicate": true
+}
+
 
 • 400 Bad Request: Insufficient funds
 

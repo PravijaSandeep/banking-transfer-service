@@ -1,5 +1,6 @@
 package com.exercise.banking.service.transfer.service;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -131,6 +132,56 @@ class TransferServiceTest {
         assertEquals("GBP", response.getCurrency());
         assertEquals(new BigDecimal("300.00"), payeeAccount.getBalance());
     }
+	
+	@Test
+    void testDuplicateTransfer() {
+		
+		logger.info("####### TEST TO VERIFY DUPLICATE TRANSFER PROCESSING ##########");
+        // Setup bank, accounts, and payee
+        Bank testBank1 = new Bank();
+        testBank1.setCode("testCode1");
+        testBank1.setName("testBank1");
+
+        Account payerAccount = new Account("ACC001", new BigDecimal("1000.00"), "Payer1", testBank1, new HashSet<>());
+        Payee payee1 = new Payee(null, "Person1-Payee1", "ACC002",testBank1, payerAccount);
+        payerAccount.addPayee(payee1);
+        
+        Account payeeAccount = new Account("ACC002", new BigDecimal("200.00"), "Payee1", testBank1, null);
+        TransferRequestV1 request = new TransferRequestV1(requestId,"ACC001", "ACC002", "testBank1", "testCode1", new BigDecimal("100.00"),"GBP",Instant.now().toString());
+
+        // Mock repository and service responses
+        when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
+        when(accRepo.findById("ACC002")).thenReturn(Optional.of(payeeAccount));
+        when(accountService.getPayeeByAccountNumbersOrThrow("ACC001", "ACC002","testCode1",requestId)).thenReturn(payee1);
+
+        // Mock the save behavior of the transaction repository
+        Transaction mockTransaction = createMockTxn(requestId);
+        
+		mockTransaction.setType(TransferType.INTRA_BANK_TRANSFER.getValue());
+		mockTransaction.setCurrency("GBP");
+		Account resultPayerAccount = new Account("ACC001", new BigDecimal("1000.00"), "Payer1", testBank1, new HashSet<>());
+		Payee payee2 = new Payee(null, "Person1-Payee1", "ACC002", testBank1, resultPayerAccount);
+		resultPayerAccount.addPayee(payee2);
+		
+        mockTransaction.setPayerAccount(resultPayerAccount);
+        
+        when(txnRepo.findByRequestId(requestId)).thenReturn(Optional.of(mockTransaction));
+
+        // Execute the transfer
+        TransferResponseV1 response = intraBankTransferService.performTransferV1(request);
+
+        // Assertions
+        assertEquals("SUCCESS", response.getStatus());
+        assertEquals(requestId,response.getRequestId());
+        assertEquals(new BigDecimal("1000.00"), response.getBalance());
+        assertEquals(new BigDecimal("100.00"), response.getAmount());
+        assertEquals(mockTransaction.getTransactionId(), response.getTransactionId());
+        assertEquals("GBP", response.getCurrency());
+        assertEquals(new BigDecimal("200.00"), payeeAccount.getBalance());
+        assertEquals(new BigDecimal("1000.00"), payerAccount.getBalance());
+        assertTrue(response.isDuplicate());
+    }
+	
 	
 	@Test
 	void testIntraBankTransferFailure() {

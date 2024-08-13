@@ -48,6 +48,10 @@ public final class TransferResponseV1 {
     @NotNull(message = "The timestamp is required")
     @Schema(description = "Timestamp in ISO 8601 format", example = "2024-08-11T17:26:13.581630Z")
     private final String timestamp; 
+    
+    @NotNull(message = "Duplicate status is required")
+    @Schema(description = "Indicates if this is a duplicate transaction", example = "false")
+    private final boolean duplicate;
 
     // Private constructor to force usage of the builder
     private TransferResponseV1(Builder builder) {
@@ -59,6 +63,7 @@ public final class TransferResponseV1 {
         this.currency = builder.currency;
         this.transferType = builder.transferType;
         this.timestamp = builder.timestamp != null ? builder.timestamp.toString() : Instant.now().toString();
+        this.duplicate = builder.isDuplicate;
     }
 
     public static class Builder {
@@ -70,6 +75,7 @@ public final class TransferResponseV1 {
         private String currency;
         private String transferType;
         private Instant timestamp;
+        boolean isDuplicate;
 
         public Builder withRequestId(UUID requestId) {
             this.requestId = requestId;
@@ -108,6 +114,11 @@ public final class TransferResponseV1 {
 
         public Builder withTimestamp(Instant timestamp) {
             this.timestamp = timestamp;
+            return this;
+        }
+        
+        public Builder withIsDuplicate(boolean isDuplicate) {
+            this.isDuplicate = isDuplicate;
             return this;
         }
 

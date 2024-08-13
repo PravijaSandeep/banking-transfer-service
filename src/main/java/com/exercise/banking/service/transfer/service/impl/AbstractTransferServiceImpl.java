@@ -2,6 +2,8 @@ package com.exercise.banking.service.transfer.service.impl;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +35,8 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
     protected final TransactionRepository txnRepository;
     protected final AccountServiceImpl accountService;
 
-    protected AbstractTransferServiceImpl(AccountRepository accountRepository, TransactionRepository txnRepository, AccountServiceImpl accountService) {
+    protected AbstractTransferServiceImpl(AccountRepository accountRepository, TransactionRepository txnRepository,
+    		AccountServiceImpl accountService) {
         this.accountRepository = accountRepository;
         this.txnRepository = txnRepository;
         this.accountService = accountService;
@@ -42,12 +45,42 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
     @Override
     @Transactional
     public TransferResponseV1 performTransferV1(TransferRequestV1 request) {
-        logger.info("Started processing transfer for request");
+    	logger.info("Started processing transfer for request");
+    	Transaction txn = null;
+    	boolean isDuplicate = false;
+    	Optional<Transaction> processedTxn = checkForDuplicateTransaction(request.getRequestId());
+    	if(processedTxn.isPresent()) {
+    		txn = processedTxn.get();
+    		isDuplicate = true;
+    		logger.info("Duplicate transaction {} detected with request id{}. Sending the previously processed transaction details",
+    				txn.getTransactionId(),txn.getRequestId());
+    	}else {
+    		txn = executeTransfer(fetchAndValidatePayerAccount(request),
+    				findRegisteredPayee(request), request);
+    	}
+    	return sendResponse(txn,isDuplicate);
+    }
+    
+    /**
+     * Check if the request is processed before by checking the request Id in the
+     * transaction table
+     * @param requestId
+     * @return
+     */
+    private Optional<Transaction> checkForDuplicateTransaction(UUID requestId) {
+        return txnRepository.findByRequestId(requestId);
+    }
+    
+    /**
+     * Fetch payer account details from DB and validate 
+     * if the payer and payee account number is different.
+     * @param request
+     * @return
+     */
+    private Account fetchAndValidatePayerAccount(TransferRequestV1 request) {
         Account payerAccount = findPayerAccount(request);
-        validateRequest(request, payerAccount);
-        Payee payee = findRegisteredPayee(request);
-        Transaction txn = executeTransfer(payerAccount, payee, request);
-        return sendResponse(txn);
+        validateAccounts(request, payerAccount);
+        return payerAccount;
     }
 
     /**
@@ -56,7 +89,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param request
      * @param payerAccount
      */
-    private void validateRequest(TransferRequestV1 request, Account payerAccount) {
+    private void validateAccounts(TransferRequestV1 request, Account payerAccount) {
         if (request.getPayerAccNumber().equals(request.getPayeeAccNumber())) {
             throw new IllegalArgumentException("Payer and payee accounts cannot be the same.");
         }
@@ -184,7 +217,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param transferredAmount
      * @return
      */
-    private TransferResponseV1 sendResponse(Transaction txn) {
+    private TransferResponseV1 sendResponse(Transaction txn, boolean isDuplicate) {
         
     	return new TransferResponseV1.Builder()
     		    .withRequestId(txn.getRequestId())  // original request id
@@ -195,6 +228,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
     		    .withCurrency(txn.getCurrency())
     		    .withTransferType(txn.getType())  // transferType
     		    .withTimestamp(Instant.now())  // current timestamp
+    		    .withIsDuplicate(isDuplicate)
     		    .build();
 
     }
