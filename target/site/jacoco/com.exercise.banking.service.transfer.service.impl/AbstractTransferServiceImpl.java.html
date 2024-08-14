@@ -50,7 +50,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
 <span class="fc" id="L50">    		isDuplicate = true;</span>
 <span class="fc" id="L51">    		logger.info(&quot;Duplicate transaction {} detected with request id{}. Sending the previously processed transaction details&quot;,</span>
 <span class="fc" id="L52">    				txn.getTransactionId(),txn.getRequestId());</span>
-    	}else {
+<span class="fc" id="L53">    	}else {</span>
 <span class="fc" id="L54">    		txn = executeTransfer(fetchAndValidatePayerAccount(request),</span>
 <span class="fc" id="L55">    				findRegisteredPayee(request), request);</span>
     	}
@@ -175,15 +175,15 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
 	protected Transaction createTransaction(Account payerAccount, Payee payee, TransferRequestV1 request,String type) {
 		// Record the transaction
 <span class="fc" id="L177">		 Transaction txn = new Transaction(</span>
-                null,  // ID will be auto-generated
+<span class="fc" id="L178">                null,  // ID will be auto-generated</span>
 <span class="fc" id="L179">                request.getRequestId(),</span>
-                payerAccount,
-                payee,
+<span class="fc" id="L180">                payerAccount,</span>
+<span class="fc" id="L181">                payee,</span>
 <span class="fc" id="L182">                request.getAmount(),</span>
 <span class="fc" id="L183">                request.getCurrency(),</span>
-                null,  // Timestamp will be set automatically
-                TransactionStatus.PENDING,
-                type
+<span class="fc" id="L184">                null,  // Timestamp will be set automatically</span>
+<span class="fc" id="L185">                TransactionStatus.PENDING,</span>
+<span class="fc" id="L186">                type</span>
                );
 		 
 <span class="fc" id="L189">		 logger.info(&quot;Request txn : {}&quot;, txn.getCurrency());</span>
@@ -219,7 +219,10 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
 <span class="fc" id="L219">    		    .withTransferType(txn.getType())  // transferType</span>
 <span class="fc" id="L220">    		    .withTimestamp(Instant.now())  // current timestamp</span>
 <span class="fc" id="L221">    		    .withIsDuplicate(isDuplicate)</span>
-<span class="fc" id="L222">    		    .build();</span>
+<span class="fc" id="L222">    		    .withPayerAccNum(txn.getPayerAccount().getAccNum())</span>
+<span class="fc" id="L223">    		    .withPayeeAccNum(txn.getPayee().getAccNum())</span>
+<span class="fc" id="L224">    		    .withPayeeBankCode(txn.getPayee().getBank().getCode())</span>
+<span class="fc" id="L225">    		    .build();</span>
 
     }
 

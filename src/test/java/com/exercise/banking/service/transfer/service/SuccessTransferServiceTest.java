@@ -125,5 +125,8 @@ class SuccessTransferServiceTest {
 		assertEquals("SUCCESS", response.getStatus());
 		assertEquals(expPayerBalance, response.getBalance());
 		assertEquals(expTransferType.getValue(), response.getTransferType());
+		assertEquals(payerAccount.getAccNum(), response.getPayerAccNumber());
+		assertEquals(payeeAccount.getAccNum(), response.getPayeeAccNumber());
+		assertEquals(payeeBankCode.trim(), response.getPayeeBankCode());
 	}
 }

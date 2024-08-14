@@ -3,7 +3,6 @@ package com.exercise.banking.service.transfer.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -24,7 +23,6 @@ import com.exercise.banking.service.transfer.exception.PayeeNotRegisteredExcepti
 import com.exercise.banking.service.transfer.model.Account;
 import com.exercise.banking.service.transfer.model.Bank;
 import com.exercise.banking.service.transfer.model.Payee;
-import com.exercise.banking.service.transfer.model.Transaction;
 import com.exercise.banking.service.transfer.repository.AccountRepository;
 import com.exercise.banking.service.transfer.repository.PayeeRepository;
 import com.exercise.banking.service.transfer.service.impl.AccountServiceImpl;

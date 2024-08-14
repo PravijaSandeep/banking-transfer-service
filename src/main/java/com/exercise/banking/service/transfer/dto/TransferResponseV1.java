@@ -45,8 +45,21 @@ public final class TransferResponseV1 {
     @Schema(description = "Transfer type", example = "IntraBankTransfer")
     private final String transferType;
     
+    @NotNull(message = "Payer account number is required")
+    @Schema(description = "Payer account number", example = "123456")
+    private final String payerAccNumber;
+    
+    @NotNull(message = "Payee account number is required")
+    @Schema(description = "Payee account number", example = "978654")
+    private final String payeeAccNumber;
+    
+    @NotNull(message = "Payee bank code is required")
+    @NotBlank(message = "Payee bank code is required")
+    @Schema(description = "Payee bank code", example = "A00001")
+    private final String payeeBankCode;
+    
     @NotNull(message = "The timestamp is required")
-    @Schema(description = "Timestamp in ISO 8601 format", example = "2024-08-11T17:26:13.581630Z")
+    @Schema(description = "Timestamp of the response in ISO 8601 format", example = "2024-08-11T17:26:13.581630Z")
     private final String timestamp; 
     
     @NotNull(message = "Duplicate status is required")
@@ -64,6 +77,9 @@ public final class TransferResponseV1 {
         this.transferType = builder.transferType;
         this.timestamp = builder.timestamp != null ? builder.timestamp.toString() : Instant.now().toString();
         this.duplicate = builder.isDuplicate;
+        this.payeeAccNumber = builder.payeeAccNum;
+        this.payerAccNumber = builder.payerAccNum;
+        this.payeeBankCode = builder.payeeBankCode;
     }
 
     public static class Builder {
@@ -76,6 +92,10 @@ public final class TransferResponseV1 {
         private String transferType;
         private Instant timestamp;
         boolean isDuplicate;
+        String payerAccNum;
+        String payeeAccNum;
+        String payeeBankCode;
+        
 
         public Builder withRequestId(UUID requestId) {
             this.requestId = requestId;
@@ -121,6 +141,22 @@ public final class TransferResponseV1 {
             this.isDuplicate = isDuplicate;
             return this;
         }
+        
+        public Builder withPayerAccNum(String payerAccNum) {
+            this.payerAccNum = payerAccNum ;
+            return this;
+        }
+        
+        public Builder withPayeeAccNum(String payeeAccNum) {
+            this.payeeAccNum = payeeAccNum ;
+            return this;
+        }
+        
+        public Builder withPayeeBankCode(String payeeBankCode) {
+            this.payeeBankCode = payeeBankCode ;
+            return this;
+        }
+        
 
         public TransferResponseV1 build() {
             return new TransferResponseV1(this);

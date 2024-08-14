@@ -1,7 +1,7 @@
 
 # Transfer Service
 
-The Transfer Service is a Spring Boot application designed to handle money transfers between bank accounts. The service supports both intra-bank and inter-bank transfers and includes robust error handling, validation, and logging. This works with preloaded account configuration (see Limitation section below). 
+The Transfer Service is a Spring Boot application designed to handle money transfers between bank accounts. The service supports both intra-bank and inter-bank transfers and includes robust error handling, validation, and logging. This works with pre-loaded account configuration (see Limitation section below). 
 
 
 
@@ -111,13 +111,15 @@ docker run -p 8080:8080 transfer-service
 
   Request Body:
   {
-    "requestId": "123e4567-e89b-12d3-a456-426614174000",
-    "payerAccNumber": "ACC001",
-    "payeeAccNumber": "OACC001",
-    "payeeBankName": "BANK_B",
-    "payeeBankCode": "B0001",
-    "amount": 1000.00
- }
+  "requestId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "payerAccNumber": "123456",
+  "payeeAccNumber": "654321",
+  "payeeBankName": "BANK_B",
+  "payeeBankCode": "B00001",
+  "amount": 100,
+  "currency": "GBP",
+  "timestamp": "2024-08-11T17:26:13.581630Z"
+}
 
 
 Responses:
@@ -126,13 +128,16 @@ Responses:
 
 {
   "requestId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "transactionId": "6e4e876e-f0f5-4c0c-b88f-1d672171814e",
+  "transactionId": "435ef22c-297d-4a74-bbfe-323c1cc569e3",
   "status": "SUCCESS",
-  "balance": 900,
+  "balance": 700,
   "amount": 100,
   "currency": "GBP",
-  "transferType": "IntraBankTransfer",
-  "timestamp": "2024-08-13T16:17:59.489450Z",
+  "transferType": "InterBankTransfer",
+  "payerAccNumber": "123456",
+  "payeeAccNumber": "654321",
+  "payeeBankCode": "B00001",
+  "timestamp": "2024-08-14T12:10:31.241848Z",
   "duplicate": false
 }
 
@@ -140,14 +145,34 @@ Responses:
 
 {
   "requestId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-  "transactionId": "6e4e876e-f0f5-4c0c-b88f-1d672171814e",
+  "transactionId": "435ef22c-297d-4a74-bbfe-323c1cc569e3",
   "status": "SUCCESS",
-  "balance": 900,
+  "balance": 700,
+  "amount": 100,
+  "currency": "GBP",
+  "transferType": "InterBankTransfer",
+  "payerAccNumber": "123456",
+  "payeeAccNumber": "654321",
+  "payeeBankCode": "B00001",
+  "timestamp": "2024-08-14T12:10:58.158557Z",
+  "duplicate": true
+}
+
+• 200 OK: Transfer successful, for an intra bank transaction
+
+{
+  "requestId": "3fa85f64-5717-4562-b3fc-2c963f66af67",
+  "transactionId": "9635bc33-7d46-40e5-9144-da2afffb865b",
+  "status": "SUCCESS",
+  "balance": 800,
   "amount": 100,
   "currency": "GBP",
   "transferType": "IntraBankTransfer",
-  "timestamp": "2024-08-13T16:18:52.627107Z",
-  "duplicate": true
+  "payerAccNumber": "123456",
+  "payeeAccNumber": "978654",
+  "payeeBankCode": "A00001",
+  "timestamp": "2024-08-14T12:06:18.472166Z",
+  "duplicate": false
 }
 
 

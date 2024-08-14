@@ -127,6 +127,7 @@ class TransferServiceTest {
 		resultPayerAccount.addPayee(payee2);
 		
         mockTransaction.setPayerAccount(resultPayerAccount);
+        mockTransaction.setPayee(payee2);
         
         when(mockTxnService.saveTransaction(any(Transaction.class))).thenReturn(mockTransaction);
         
@@ -173,6 +174,7 @@ class TransferServiceTest {
 		Account resultPayerAccount = new Account("ACC001", new BigDecimal("1000.00"), "Payer1", testBank1, new HashSet<>());
 		Payee payee2 = new Payee(null, "Person1-Payee1", "ACC002", testBank1, resultPayerAccount);
 		resultPayerAccount.addPayee(payee2);
+		mockTransaction.setPayee(payee2);
 		
         mockTransaction.setPayerAccount(resultPayerAccount);
         
@@ -313,6 +315,7 @@ class TransferServiceTest {
 		Account resultPayerAccount = new Account("ACC001", new BigDecimal("900.00"), "Payer1", testBank1, new HashSet<>());
 		Payee payee2 = new Payee(null, "Person1-Payee1", "ACC003",   testBank2, resultPayerAccount);
 		resultPayerAccount.addPayee(payee2);
+		mockTransaction.setPayee(payee2);
 		
         mockTransaction.setPayerAccount(resultPayerAccount);
 

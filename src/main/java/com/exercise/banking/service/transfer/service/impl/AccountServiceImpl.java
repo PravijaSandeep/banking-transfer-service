@@ -48,8 +48,7 @@ public class AccountServiceImpl implements AccountService{
 	    return payeeRepo.findByPayerAccount_AccNumAndAccNum(payerAccountNum, payeeAccountNum)
 	        .filter(payee -> payee.getBank().getCode().equals(payeeBankCode))  // Check the bank code
 	        .orElseThrow(() -> {
-	            logger.error("Payee not found or bank code does not match for accounts: {} and {} with bank code {}", 
-	                         payerAccountNum, payeeAccountNum, payeeBankCode);
+	            logger.error("Payee not found or payee bank code {} does not match", payeeBankCode);
 	            throw new PayeeNotRegisteredException(requestId);
 	        });
 	}

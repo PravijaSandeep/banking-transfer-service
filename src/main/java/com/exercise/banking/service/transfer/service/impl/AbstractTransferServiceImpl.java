@@ -219,6 +219,9 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
     		    .withTransferType(txn.getType())  // transferType
     		    .withTimestamp(Instant.now())  // current timestamp
     		    .withIsDuplicate(isDuplicate)
+    		    .withPayerAccNum(txn.getPayerAccount().getAccNum())
+    		    .withPayeeAccNum(txn.getPayee().getAccNum())
+    		    .withPayeeBankCode(txn.getPayee().getBank().getCode())
     		    .build();
 
     }
