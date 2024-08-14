@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -17,6 +16,7 @@ import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,30 +27,25 @@ import com.exercise.banking.service.transfer.model.Account;
 import com.exercise.banking.service.transfer.model.Bank;
 import com.exercise.banking.service.transfer.model.Payee;
 import com.exercise.banking.service.transfer.model.Transaction;
-import com.exercise.banking.service.transfer.repository.AccountRepository;
-import com.exercise.banking.service.transfer.repository.TransactionRepository;
-import com.exercise.banking.service.transfer.service.impl.AccountServiceImpl;
 import com.exercise.banking.service.transfer.service.impl.IntraBankTransferService;
 
 @Transactional
 @DataJpaTest
 class ConcurrentTransferServiceTest {
 
-    @Mock
-    private AccountRepository accRepo;
 
     @Mock
-    private TransactionRepository txnRepo;
-
+    private AccountService accountService;
+    
     @Mock
-    private AccountServiceImpl accountService;
+    TransactionService txnService;
 
     private IntraBankTransferService intraBankTransferService;
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        intraBankTransferService = new IntraBankTransferService(accRepo, txnRepo, accountService);
+        intraBankTransferService = new IntraBankTransferService(txnService, accountService);
     }
 
     @Test
@@ -69,12 +64,29 @@ class ConcurrentTransferServiceTest {
         TransferRequestV1 request = new TransferRequestV1(requestId, "ACC001", "ACC002", "testBank1", "testCode1", new BigDecimal("100.00"), "GBP", Instant.now().toString());
 
         // Mock repository and service responses
-        when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
-        when(accRepo.findById("ACC002")).thenReturn(Optional.of(payeeAccount));
+        when(accountService.getAccountByNumberOrThrow("ACC001",requestId)).thenReturn(payerAccount);
+        when(accountService.getAccountByNumberOrThrow("ACC002",requestId)).thenReturn(payeeAccount);
         when(accountService.getPayeeByAccountNumbersOrThrow("ACC001", "ACC002", "testCode1", requestId)).thenReturn(payee1);
+        
+        Mockito.doAnswer(invocation -> {
+            Account account = invocation.getArgument(0);
+            BigDecimal amount = invocation.getArgument(1);
+            account.setBalance(account.getBalance().add(amount));
+            return account; // void method, so return null
+        }).when(accountService).creditToAccount(any(Account.class), any(BigDecimal.class), any(UUID.class));
+        
+        
+        
+        Mockito.doAnswer(invocation -> {
+            Account account = invocation.getArgument(0);
+            BigDecimal amount = invocation.getArgument(1);
+            account.setBalance(account.getBalance().subtract(amount));
+            return account; // void method, so return null
+        }).when(accountService).debitFromAccount(any(Account.class), any(BigDecimal.class), any(UUID.class));
+
 
         // Mock the save behavior of the transaction repository
-        when(txnRepo.save(any(Transaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(txnService.saveTransaction(any(Transaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Run concurrent transfers using CompletableFuture
         CompletableFuture<TransferResponseV1>[] futures = IntStream.range(0, 10)

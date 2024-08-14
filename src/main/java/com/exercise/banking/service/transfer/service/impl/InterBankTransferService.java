@@ -9,8 +9,8 @@ import com.exercise.banking.service.transfer.model.Account;
 import com.exercise.banking.service.transfer.model.Payee;
 import com.exercise.banking.service.transfer.model.Transaction;
 import com.exercise.banking.service.transfer.model.TransferType;
-import com.exercise.banking.service.transfer.repository.AccountRepository;
-import com.exercise.banking.service.transfer.repository.TransactionRepository;
+import com.exercise.banking.service.transfer.service.AccountService;
+import com.exercise.banking.service.transfer.service.TransactionService;
 /**
  * Service class handles inter bank transactions
  */
@@ -19,8 +19,8 @@ public class InterBankTransferService extends  AbstractTransferServiceImpl{
 
 	private static final Logger logger = LoggerFactory.getLogger(InterBankTransferService.class);
 
-	public InterBankTransferService(AccountRepository accountRepository, TransactionRepository txnRepository, AccountServiceImpl accountService) {
-		super(accountRepository, txnRepository, accountService);
+	public InterBankTransferService( TransactionService txnService,AccountService accountService) {
+		super(txnService, accountService);
 	}
 
 

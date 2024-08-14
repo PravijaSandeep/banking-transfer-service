@@ -9,7 +9,6 @@ import java.time.Instant;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -17,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,24 +28,19 @@ import com.exercise.banking.service.transfer.model.Bank;
 import com.exercise.banking.service.transfer.model.Payee;
 import com.exercise.banking.service.transfer.model.Transaction;
 import com.exercise.banking.service.transfer.model.TransferType;
-import com.exercise.banking.service.transfer.repository.AccountRepository;
-import com.exercise.banking.service.transfer.repository.TransactionRepository;
-import com.exercise.banking.service.transfer.service.impl.AccountServiceImpl;
 import com.exercise.banking.service.transfer.service.impl.InterBankTransferService;
 import com.exercise.banking.service.transfer.service.impl.IntraBankTransferService;
 
 @Transactional
 @DataJpaTest
 class SuccessTransferServiceTest {
-
+	
 	@Mock
-	private AccountRepository accRepo;
+    private AccountService accountService;
+    
+    @Mock
+    TransactionService txnService;
 
-	@Mock
-	private TransactionRepository txnRepo;
-
-	@Mock
-	private AccountServiceImpl accountService;
 
 	private TransferServiceSelector selector;
 
@@ -55,8 +50,8 @@ class SuccessTransferServiceTest {
 		// Create the EnumMap with the mocked services
         Map<TransferType, TransferService> services = new EnumMap<>(TransferType.class);
         
-        IntraBankTransferService intraBankSvc = new IntraBankTransferService(accRepo, txnRepo, accountService);
-		InterBankTransferService interBankSvc = new InterBankTransferService(accRepo, txnRepo, accountService);
+        IntraBankTransferService intraBankSvc = new IntraBankTransferService(txnService, accountService);
+		InterBankTransferService interBankSvc = new InterBankTransferService(txnService, accountService);
 		
         services.put(TransferType.INTER_BANK_TRANSFER, interBankSvc);
         services.put(TransferType.INTRA_BANK_TRANSFER, intraBankSvc);
@@ -91,7 +86,20 @@ class SuccessTransferServiceTest {
 		Payee payee1 = new Payee(null, "Person1-Payee1", payeeAccNumber,payeeBank, payerAccount);
 		payerAccount.getPayees().add(payee1);
 
-		
+		Mockito.doAnswer(invocation -> {
+            Account account = invocation.getArgument(0);
+            BigDecimal amnt = invocation.getArgument(1);
+            account.setBalance(account.getBalance().add(amnt));
+            return account; // void method, so return null
+        }).when(accountService).creditToAccount(any(Account.class), any(BigDecimal.class), any(UUID.class));
+        
+        Mockito.doAnswer(invocation -> {
+            Account account = invocation.getArgument(0);
+            BigDecimal amnt = invocation.getArgument(1);
+            account.setBalance(account.getBalance().subtract(amnt));
+            return account; // void method, so return null
+        }).when(accountService).debitFromAccount(any(Account.class), any(BigDecimal.class), any(UUID.class));
+
 
 		UUID requestId = UUID.randomUUID();
 		Account payeeAccount = new Account(payeeAccNumber, new BigDecimal("200.00"), "Payee1", payeeBank, null);
@@ -99,13 +107,15 @@ class SuccessTransferServiceTest {
 				payeeBankCode, amount, currency, Instant.now().toString());
 
 		// Mock repository and service responses
-		when(accRepo.findById(payerAccNumber)).thenReturn(Optional.of(payerAccount));
-		when(accRepo.findById(payeeAccNumber)).thenReturn(Optional.of(payeeAccount));
 		when(accountService.getPayeeByAccountNumbersOrThrow(payerAccNumber, payeeAccNumber, payeeBankCode, requestId))
 				.thenReturn(payee1);
+		
+		 when(accountService.getAccountByNumberOrThrow(payerAccNumber,requestId)).thenReturn(payerAccount);
+	     when(accountService.getAccountByNumberOrThrow(payeeAccNumber,requestId)).thenReturn(payeeAccount);
+	        
 
 		// Mock the save behavior of the transaction repository
-		when(txnRepo.save(any(Transaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
+	    when(txnService.saveTransaction(any(Transaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
 		// Perform transfer
 		CompletableFuture<TransferResponseV1> future = CompletableFuture.supplyAsync(() -> svc.performTransferV1(request));

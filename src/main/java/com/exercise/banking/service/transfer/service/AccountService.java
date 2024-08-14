@@ -1,5 +1,6 @@
 package com.exercise.banking.service.transfer.service;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import com.exercise.banking.service.transfer.model.Account;
@@ -26,5 +27,24 @@ public interface AccountService {
 	  * @return
 	  */
 	 Payee getPayeeByAccountNumbersOrThrow(String payerAccountNum, String payeeAccountNum, String payeeBankCode, UUID requestId);
-
+	 
+	 /**
+	  * Credits the amount to the account
+	  * @param account
+	  * @param amount
+	  * @param requestId
+	  * @return updated account
+	  */
+	 Account creditToAccount(Account account, BigDecimal amount,UUID requestId);
+	 
+	/**
+	 * Debits amount from account
+	 * @param account
+	 * @param amount
+	 * @param requestId
+	 * @return updated account
+	 */
+	 Account debitFromAccount(Account account, BigDecimal amount,UUID requestId);
+	 
+	 
 }

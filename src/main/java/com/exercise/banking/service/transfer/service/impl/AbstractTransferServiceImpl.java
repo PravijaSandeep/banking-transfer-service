@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.exercise.banking.service.transfer.dto.TransferRequestV1;
 import com.exercise.banking.service.transfer.dto.TransferResponseV1;
-import com.exercise.banking.service.transfer.exception.AccountNotFoundException;
 import com.exercise.banking.service.transfer.exception.InsufficientFundsException;
 import com.exercise.banking.service.transfer.exception.TransactionProcessingException;
 import com.exercise.banking.service.transfer.model.Account;
@@ -19,8 +18,8 @@ import com.exercise.banking.service.transfer.model.Payee;
 import com.exercise.banking.service.transfer.model.Transaction;
 import com.exercise.banking.service.transfer.model.TransactionStatus;
 import com.exercise.banking.service.transfer.model.TransferType;
-import com.exercise.banking.service.transfer.repository.AccountRepository;
-import com.exercise.banking.service.transfer.repository.TransactionRepository;
+import com.exercise.banking.service.transfer.service.AccountService;
+import com.exercise.banking.service.transfer.service.TransactionService;
 import com.exercise.banking.service.transfer.service.TransferService;
 /**
  * Abstract Service implementation for Transfer.
@@ -31,14 +30,11 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractTransferServiceImpl.class);
 
-    protected final AccountRepository accountRepository;
-    protected final TransactionRepository txnRepository;
-    protected final AccountServiceImpl accountService;
+    protected final TransactionService txnService;
+    protected final AccountService accountService;
 
-    protected AbstractTransferServiceImpl(AccountRepository accountRepository, TransactionRepository txnRepository,
-    		AccountServiceImpl accountService) {
-        this.accountRepository = accountRepository;
-        this.txnRepository = txnRepository;
+    protected AbstractTransferServiceImpl( TransactionService txnService,AccountService accountService) {
+        this .txnService = txnService;
         this.accountService = accountService;
     }
 
@@ -68,7 +64,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @return
      */
     private Optional<Transaction> checkForDuplicateTransaction(UUID requestId) {
-        return txnRepository.findByRequestId(requestId);
+        return txnService.findByRequestId(requestId);
     }
     
     /**
@@ -91,6 +87,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      */
     private void validateAccounts(TransferRequestV1 request, Account payerAccount) {
         if (request.getPayerAccNumber().equals(request.getPayeeAccNumber())) {
+        	logger.error("Payer and payee accounts cannot be the same.");
             throw new IllegalArgumentException("Payer and payee accounts cannot be the same.");
         }
         checkBalance(request, payerAccount);
@@ -129,10 +126,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @return
      */
     private Account findPayerAccount(TransferRequestV1 request) {
-        return accountRepository.findById(request.getPayerAccNumber())
-                .orElseThrow(() -> 
-                     new AccountNotFoundException(request.getRequestId())
-                );
+    	return accountService.getAccountByNumberOrThrow(request.getPayerAccNumber(), request.getRequestId());
     }
 
     /**
@@ -149,11 +143,11 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
         Transaction transaction = createTransaction(payerAccount, payee, request, type.getValue());
         try {
             // Update the payer account balance
-            updatePayerAccountBalance(payerAccount, request.getAmount());
+            updatePayerAccountBalance(payerAccount, request.getAmount(),request.getRequestId());
 
             // Save the transaction with status "Success"
             transaction.setStatus(TransactionStatus.SUCCESS);
-            transaction = txnRepository.save(transaction);
+            transaction = txnService.saveTransaction(transaction);
 
             logger.info("Transaction {} recorded successfully", transaction.getTransactionId());
             return transaction;
@@ -164,7 +158,7 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
 
             // Set the transaction status to "Failure"
             transaction.setStatus(TransactionStatus.FAILURE);
-            txnRepository.save(transaction); // Save the failed transaction
+            txnService.saveTransaction(transaction);
 
             throw new TransactionProcessingException(request.getRequestId(),e.getMessage());
         }
@@ -201,13 +195,9 @@ public abstract class AbstractTransferServiceImpl implements TransferService {
      * @param payerAccount
      * @param amount
      */
-	private synchronized void updatePayerAccountBalance(Account payerAccount, BigDecimal amount) {
+	private void updatePayerAccountBalance(Account payerAccount, BigDecimal amount, UUID requestId) {
 		logger.info("Debiting {} from payer Account with balance: {}", amount,  payerAccount.getBalance());
-        BigDecimal balance = payerAccount.getBalance().subtract(amount);
-        logger.info("Updating balance to '{}'.", balance);
-
-        payerAccount.setBalance(balance);
-        accountRepository.save(payerAccount);
+		accountService.debitFromAccount(payerAccount, amount, requestId);
 	}
 	
 	 /**

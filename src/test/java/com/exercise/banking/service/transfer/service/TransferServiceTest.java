@@ -1,8 +1,8 @@
 package com.exercise.banking.service.transfer.service;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,9 +41,6 @@ import com.exercise.banking.service.transfer.model.Payee;
 import com.exercise.banking.service.transfer.model.Transaction;
 import com.exercise.banking.service.transfer.model.TransactionStatus;
 import com.exercise.banking.service.transfer.model.TransferType;
-import com.exercise.banking.service.transfer.repository.AccountRepository;
-import com.exercise.banking.service.transfer.repository.TransactionRepository;
-import com.exercise.banking.service.transfer.service.impl.AccountServiceImpl;
 import com.exercise.banking.service.transfer.service.impl.InterBankTransferService;
 import com.exercise.banking.service.transfer.service.impl.IntraBankTransferService;
 
@@ -53,24 +51,19 @@ class TransferServiceTest {
 	
 	private static final Logger logger = LoggerFactory.getLogger(TransferServiceTest.class);
 
-
 	@Mock
-	AccountRepository accRepo;
-
-	@Mock
-	TransactionRepository txnRepo;
+    private AccountService mockAccntService;
+    
+    @Mock
+    private TransactionService mockTxnService;
 
 	@InjectMocks
 	TransferServiceSelectorTest transferSvcSelector;
 
 	private IntraBankTransferService intraBankTransferService;
 
-
 	private InterBankTransferService interBankTransferService;
 
-	@Mock
-	private AccountServiceImpl accountService;
-	
 	private UUID requestId;
 	
 	
@@ -78,11 +71,28 @@ class TransferServiceTest {
 	@BeforeEach
 	public void setUp() {
 		MockitoAnnotations.openMocks(this);
-       intraBankTransferService = new IntraBankTransferService(accRepo, txnRepo, accountService);
-       interBankTransferService = new InterBankTransferService(accRepo, txnRepo, accountService);
+       intraBankTransferService = new IntraBankTransferService(mockTxnService, mockAccntService);
+       interBankTransferService = new InterBankTransferService(mockTxnService,mockAccntService);
        
        requestId = UUID.randomUUID();
        MDC.put("requestId", requestId.toString());
+       
+       Mockito.doAnswer(invocation -> {
+           Account account = invocation.getArgument(0);
+           BigDecimal amount = invocation.getArgument(1);
+           account.setBalance(account.getBalance().add(amount));
+           return account; 
+       }).when(mockAccntService).creditToAccount(any(Account.class), any(BigDecimal.class), any(UUID.class));
+       
+       
+       
+       Mockito.doAnswer(invocation -> {
+           Account account = invocation.getArgument(0);
+           BigDecimal amount = invocation.getArgument(1);
+           account.setBalance(account.getBalance().subtract(amount));
+           return account; 
+       }).when(mockAccntService).debitFromAccount(any(Account.class), any(BigDecimal.class), any(UUID.class));
+
 
 	}
 
@@ -102,10 +112,10 @@ class TransferServiceTest {
         Account payeeAccount = new Account("ACC002", new BigDecimal("200.00"), "Payee1", testBank1, null);
         TransferRequestV1 request = new TransferRequestV1(requestId,"ACC001", "ACC002", "testBank1", "testCode1", new BigDecimal("100.00"),"GBP",Instant.now().toString());
 
-        // Mock repository and service responses
-        when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
-        when(accRepo.findById("ACC002")).thenReturn(Optional.of(payeeAccount));
-        when(accountService.getPayeeByAccountNumbersOrThrow("ACC001", "ACC002","testCode1",requestId)).thenReturn(payee1);
+        // Mock account service responses
+        when(mockAccntService.getAccountByNumberOrThrow("ACC001",requestId)).thenReturn(payerAccount);
+        when(mockAccntService.getAccountByNumberOrThrow("ACC002",requestId)).thenReturn(payeeAccount);
+        when(mockAccntService.getPayeeByAccountNumbersOrThrow("ACC001", "ACC002", "testCode1", requestId)).thenReturn(payee1);
 
         // Mock the save behavior of the transaction repository
         Transaction mockTransaction = createMockTxn(requestId);
@@ -118,7 +128,8 @@ class TransferServiceTest {
 		
         mockTransaction.setPayerAccount(resultPayerAccount);
         
-        when(txnRepo.save(any(Transaction.class))).thenReturn(mockTransaction);
+        when(mockTxnService.saveTransaction(any(Transaction.class))).thenReturn(mockTransaction);
+        
 
         // Execute the transfer
         TransferResponseV1 response = intraBankTransferService.performTransferV1(request);
@@ -149,10 +160,10 @@ class TransferServiceTest {
         Account payeeAccount = new Account("ACC002", new BigDecimal("200.00"), "Payee1", testBank1, null);
         TransferRequestV1 request = new TransferRequestV1(requestId,"ACC001", "ACC002", "testBank1", "testCode1", new BigDecimal("100.00"),"GBP",Instant.now().toString());
 
-        // Mock repository and service responses
-        when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
-        when(accRepo.findById("ACC002")).thenReturn(Optional.of(payeeAccount));
-        when(accountService.getPayeeByAccountNumbersOrThrow("ACC001", "ACC002","testCode1",requestId)).thenReturn(payee1);
+        // Mock account service responses
+        mockAccount(payerAccount,"ACC001");
+        mockAccount(payeeAccount,"ACC002");
+        mockPayeeByAccountNumber("ACC001", "ACC002","testCode1",payee1);
 
         // Mock the save behavior of the transaction repository
         Transaction mockTransaction = createMockTxn(requestId);
@@ -165,7 +176,8 @@ class TransferServiceTest {
 		
         mockTransaction.setPayerAccount(resultPayerAccount);
         
-        when(txnRepo.findByRequestId(requestId)).thenReturn(Optional.of(mockTransaction));
+        when(mockTxnService.findByRequestId(requestId)).thenReturn(Optional.of(mockTransaction));
+
 
         // Execute the transfer
         TransferResponseV1 response = intraBankTransferService.performTransferV1(request);
@@ -195,30 +207,29 @@ class TransferServiceTest {
 	    Payee payee1 = new Payee(null, "Person1-Payee1", "ACC002", testBank1, payerAccount);
 	    payerAccount.addPayee(payee1);
 	    
+	    BigDecimal amount= new BigDecimal("100.00");
 
 	    Account payeeAccount = new Account("ACC002", new BigDecimal("200.00"), "Payee1", testBank1, null);
 	    TransferRequestV1 request = new TransferRequestV1(requestId,"ACC001", "ACC002", 
 	    		"testBank1", "testCode1", new BigDecimal("100.00"),"EUR",Instant.now().toString());
 
-	    // Mock repository and service responses
-	    when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
-	    when(accRepo.findById("ACC002")).thenReturn(Optional.of(payeeAccount));
-	    when(accountService.getPayeeByAccountNumbersOrThrow("ACC001", "ACC002","testCode1",requestId)).thenReturn(payee1);
+	    
+	    // Mock account service responses
+        mockAccount(payerAccount,"ACC001");
+        mockAccount(payeeAccount,"ACC002");
+        mockPayeeByAccountNumber("ACC001", "ACC002","testCode1",payee1);
 
-	    // Mock the save behavior of the transaction repository
-	    Transaction mockTransaction = createMockTxn(requestId);
-	    mockTransaction.setType(TransferType.INTRA_BANK_TRANSFER.getValue());
-	    when(txnRepo.save(any(Transaction.class))).thenReturn(mockTransaction);
 
 	    // Simulate a failure in saving the payer account
-	    when(accRepo.save(any(Account.class))).thenThrow(new RuntimeException("Simulated database failure"));
+	    when(mockAccntService.debitFromAccount(payerAccount, amount, requestId)).thenThrow(new RuntimeException("Simulated database failure"));
+	    
 
 	    // Execute the transfer and expect a TransactionProcessingException
 	    assertThrows(TransactionProcessingException.class, () -> intraBankTransferService.performTransferV1(request));
 
 	    // Capture the Transaction object that was passed to save()
 	    ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);
-	    verify(txnRepo, times(1)).save(transactionCaptor.capture()); 
+	    verify(mockTxnService, times(1)).saveTransaction(transactionCaptor.capture()); 
 
 	    // Get the captured Transaction objects
 	    List<Transaction> capturedTransactions = transactionCaptor.getAllValues();
@@ -247,11 +258,23 @@ class TransferServiceTest {
         TransferRequestV1 request = new TransferRequestV1(requestId,"ACC001", "ACC002", "testBank1", "testCode1", 
         		new BigDecimal("100.00"),"GBP",Instant.now().toString());
 
-        // Mock repository and service responses
-        when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
-        when(accRepo.findById("ACC002")).thenReturn(Optional.empty());
+        mockAccount(payerAccount,"ACC001");
+		when(mockAccntService.getAccountByNumberOrThrow("ACC002",requestId)).thenThrow(new AccountNotFoundException(requestId));
         
-        when(accountService.getPayeeByAccountNumbersOrThrow("ACC001", "ACC002","testCode1",requestId)).thenReturn(payee1);
+        when(mockAccntService.getPayeeByAccountNumbersOrThrow("ACC001", "ACC002","testCode1",requestId)).thenReturn(payee1);
+        
+        Transaction mockTransaction = createMockTxn(requestId);
+		mockTransaction.setType(TransferType.INTRA_BANK_TRANSFER.getValue());
+		mockTransaction.setCurrency("EUR");
+		Account resultPayerAccount = new Account("ACC001", new BigDecimal("900.00"), "Payer1", testBank1, new HashSet<>());
+		Payee payee2 = new Payee(null, "Person1-Payee1", "ACC002",   testBank1, resultPayerAccount);
+		resultPayerAccount.addPayee(payee2);
+		
+        mockTransaction.setPayerAccount(resultPayerAccount);
+
+        // Mock the save behavior of the repository
+        when(mockTxnService.saveTransaction(any(Transaction.class))).thenReturn(mockTransaction);
+        
         
         assertThrows(AccountNotFoundException.class, () -> intraBankTransferService.performTransferV1(request));
     }
@@ -280,9 +303,9 @@ class TransferServiceTest {
 		TransferRequestV1 request = new TransferRequestV1(requestId,"ACC001", "ACC003", "testBank2", "testCode2", 
 				new BigDecimal("100.00"),"EUR",Instant.now().toString());
 
-		when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
-		when(accountService.getPayeeByAccountNumbersOrThrow("ACC001", "ACC003","testCode2",requestId))
+		when(mockAccntService.getPayeeByAccountNumbersOrThrow("ACC001", "ACC003","testCode2",requestId))
 		.thenReturn(payee1);
+		 mockAccount(payerAccount,"ACC001");
 		
 		Transaction mockTransaction = createMockTxn(requestId);
 		mockTransaction.setType(TransferType.INTER_BANK_TRANSFER.getValue());
@@ -294,7 +317,8 @@ class TransferServiceTest {
         mockTransaction.setPayerAccount(resultPayerAccount);
 
         // Mock the save behavior of the repository
-        when(txnRepo.save(any(Transaction.class))).thenReturn(mockTransaction);
+        when(mockTxnService.saveTransaction(any(Transaction.class))).thenReturn(mockTransaction);
+
 
 		TransferResponseV1 response = interBankTransferService.performTransferV1(request);
 		assertEquals(requestId,response.getRequestId());
@@ -323,8 +347,8 @@ class TransferServiceTest {
 		TransferRequestV1 request = new TransferRequestV1(requestId,"ACC001", "ACC003", "testBank2", "testCode2", 
 				new BigDecimal("100.00"),"GBP",Instant.now().toString());
 		
-		when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
-		when(accountService.getPayeeByAccountNumbersOrThrow("ACC001", "ACC003","testCode2",requestId))
+		mockAccount(payerAccount,"ACC001");
+		when(mockAccntService.getPayeeByAccountNumbersOrThrow("ACC001", "ACC003","testCode2",requestId))
         .thenThrow(new PayeeNotRegisteredException(requestId));
 
 		assertThrows(PayeeNotRegisteredException.class, () -> intraBankTransferService.performTransferV1(request));
@@ -345,8 +369,7 @@ class TransferServiceTest {
 		TransferRequestV1 request = new TransferRequestV1(UUID.randomUUID(),"ACC001", "ACC001", "testBank1", "testCode1", 
 				new BigDecimal("100.00"),"GBP",Instant.now().toString());
 
-		when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
-		
+		mockAccount(payerAccount,"ACC001");
 
 		assertThrows(IllegalArgumentException.class, () -> intraBankTransferService.performTransferV1(request));
 
@@ -357,8 +380,11 @@ class TransferServiceTest {
 	void testTransferFromUnknownAccount() {
 		logger.info("#######TEST FOR TRANSFER FROM UNKNWON ACCOUNT ##########");
 
-		TransferRequestV1 request = new TransferRequestV1(UUID.randomUUID(),"ACC001", "ACC003", "testBank2", "testCode2",
+		TransferRequestV1 request = new TransferRequestV1(requestId,"ACC001", "ACC003", "testBank2", "testCode2",
 				new BigDecimal("100.00"),"GBP",Instant.now().toString());
+		
+		when(mockAccntService.getAccountByNumberOrThrow("ACC001",requestId)).thenThrow(new AccountNotFoundException(requestId));
+
 		assertThrows(AccountNotFoundException.class, () -> intraBankTransferService.performTransferV1(request));
 	}
 
@@ -381,10 +407,10 @@ class TransferServiceTest {
 		Payee payee1 = new Payee(null, "Person1-Payee1", "ACC003",   testBank2, payerAccount);
 		payerAccount.getPayees().add(payee1);
 
-		TransferRequestV1 request = new TransferRequestV1(UUID.randomUUID(),"ACC001", "ACC003", "testBank2", "testCode2", 
+		TransferRequestV1 request = new TransferRequestV1(requestId,"ACC001", "ACC003", "testBank2", "testCode2", 
 				new BigDecimal("100.00"),"GBP",Instant.now().toString());
 
-		when(accRepo.findById("ACC001")).thenReturn(Optional.of(payerAccount));
+		mockAccount(payerAccount,"ACC001");
 		assertThrows(InsufficientFundsException.class, () -> intraBankTransferService.performTransferV1(request));
 
 	}
@@ -396,6 +422,14 @@ class TransferServiceTest {
         mockTransaction.setAmount(new BigDecimal("100.00"));
         mockTransaction.setStatus(TransactionStatus.SUCCESS);
 		return mockTransaction;
+	}
+	
+	private void mockAccount( Account account,String accountNum) {
+		when(mockAccntService.getAccountByNumberOrThrow(accountNum,requestId)).thenReturn(account);
+	}
+	
+	private void mockPayeeByAccountNumber(String payerAccNum, String payeeAccNum, String payeeBankCode, Payee payee1) {
+        when(mockAccntService.getPayeeByAccountNumbersOrThrow(payerAccNum, payeeAccNum, payeeBankCode, requestId)).thenReturn(payee1);
 	}
 	
 	@AfterEach

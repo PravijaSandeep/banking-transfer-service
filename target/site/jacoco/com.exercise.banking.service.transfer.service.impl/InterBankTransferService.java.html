@@ -9,8 +9,8 @@ import com.exercise.banking.service.transfer.model.Account;
 import com.exercise.banking.service.transfer.model.Payee;
 import com.exercise.banking.service.transfer.model.Transaction;
 import com.exercise.banking.service.transfer.model.TransferType;
-import com.exercise.banking.service.transfer.repository.AccountRepository;
-import com.exercise.banking.service.transfer.repository.TransactionRepository;
+import com.exercise.banking.service.transfer.service.AccountService;
+import com.exercise.banking.service.transfer.service.TransactionService;
 /**
  * Service class handles inter bank transactions
  */
@@ -19,14 +19,14 @@ public class InterBankTransferService extends  AbstractTransferServiceImpl{
 
 <span class="fc" id="L20">	private static final Logger logger = LoggerFactory.getLogger(InterBankTransferService.class);</span>
 
-	public InterBankTransferService(AccountRepository accountRepository, TransactionRepository txnRepository, AccountServiceImpl accountService) {
-<span class="fc" id="L23">		super(accountRepository, txnRepository, accountService);</span>
+	public InterBankTransferService( TransactionService txnService,AccountService accountService) {
+<span class="fc" id="L23">		super(txnService, accountService);</span>
 <span class="fc" id="L24">	}</span>
 
 
 	@Override
 	protected Transaction executeTransfer(Account payerAccount, Payee payee, TransferRequestV1 request) {
-<span class="fc" id="L29">		logger.info(&quot;Executing intra-bank transfer&quot;);</span>
+<span class="fc" id="L29">		logger.info(&quot;Executing inter-bank transfer&quot;);</span>
 <span class="fc" id="L30">		Transaction txn = recordTransaction(payerAccount, payee,request,TransferType.INTER_BANK_TRANSFER);</span>
 
 		// TODO call the other bank service API

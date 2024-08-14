@@ -13,8 +13,8 @@ import com.exercise.banking.service.transfer.model.Account;
 import com.exercise.banking.service.transfer.model.Payee;
 import com.exercise.banking.service.transfer.model.Transaction;
 import com.exercise.banking.service.transfer.model.TransferType;
-import com.exercise.banking.service.transfer.repository.AccountRepository;
-import com.exercise.banking.service.transfer.repository.TransactionRepository;
+import com.exercise.banking.service.transfer.service.AccountService;
+import com.exercise.banking.service.transfer.service.TransactionService;
 /**
  * Service class handles intra bank transfers
  */
@@ -23,20 +23,15 @@ public class IntraBankTransferService extends AbstractTransferServiceImpl {
 
 	private static final Logger logger = LoggerFactory.getLogger(IntraBankTransferService.class);
 
-	public IntraBankTransferService(AccountRepository accountRepository, TransactionRepository txnRepository, AccountServiceImpl accountService) {
-		super(accountRepository, txnRepository, accountService);
+	public IntraBankTransferService(TransactionService txnService,AccountService accountService) {
+		super(txnService, accountService);
 	}
 
 	@Override
 	protected synchronized Transaction executeTransfer(Account payerAccount, Payee payee, TransferRequestV1 request) throws AccountNotFoundException {
 		logger.debug("Trying to execute intra-bank transfer");
-		BigDecimal amount = request.getAmount();
-		Account payeeAccount = getPayeeAccount(request.getPayeeAccNumber(),request.getRequestId());
 		Transaction txn = recordTransaction(payerAccount, payee, request,TransferType.INTRA_BANK_TRANSFER);
-		updatePayeeBalance(payeeAccount, amount);
-		logger.info("Txn: {} Payee Account balance updated to {}",txn.getTransactionId(), payeeAccount.getBalance());
-
-		logger.info("Txn: {} Transfer of {} completed successfully.", txn.getTransactionId(),amount);
+		logger.info("Txn: {} Transfer of {} completed successfully.", txn.getTransactionId(),request.getAmount());
 		return txn;
 	}
 
@@ -46,12 +41,11 @@ public class IntraBankTransferService extends AbstractTransferServiceImpl {
 	 * @param amount
 	 * @return
 	 */
-	private  Account updatePayeeBalance( Account payeeAccount, BigDecimal amount) {
-		// Add the transfer amount to the payee's account balance
-		payeeAccount.setBalance(payeeAccount.getBalance().add(amount));
-		accountRepository.save(payeeAccount);
-
-		return payeeAccount;
+	private  void updatePayeeBalance( String payeeAccNum, BigDecimal amount,UUID requestId) {
+		// Add the transfered amount to the payee's account balance
+		Account payeeAccount = getPayeeAccount(payeeAccNum,requestId);
+		this.accountService.creditToAccount(payeeAccount, amount, requestId);
+		logger.info("Payee Account balance updated to {}", payeeAccount.getBalance());
 	}
 
 	/**
@@ -62,11 +56,16 @@ public class IntraBankTransferService extends AbstractTransferServiceImpl {
 	 */
 	private Account getPayeeAccount(String payeeAccountNum, UUID requestId) {
 		logger.debug("Getting Payee account details ");
-		return accountRepository.findById(payeeAccountNum)
-				.orElseThrow(() ->{ 
-					logger.error("Transfer failed for request {}: Unable to find Payee account",requestId);
-					throw new AccountNotFoundException(requestId);
-				});
+		return this.accountService.getAccountByNumberOrThrow(payeeAccountNum, requestId);
+		
+	}
+	
+	@Override
+	protected Transaction recordTransaction(Account payerAccount, Payee payee, TransferRequestV1 request,TransferType type) {
+		Transaction txn= super.recordTransaction(payerAccount, payee, request, type);
+		// update Payee account balance
+		this.updatePayeeBalance(request.getPayeeAccNumber(), request.getAmount(), request.getRequestId());
+		return txn;
 	}
 
 }

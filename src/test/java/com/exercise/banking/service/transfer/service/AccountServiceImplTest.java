@@ -3,6 +3,7 @@ package com.exercise.banking.service.transfer.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -18,10 +19,12 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.exercise.banking.service.transfer.exception.AccountNotFoundException;
+import com.exercise.banking.service.transfer.exception.InsufficientFundsException;
 import com.exercise.banking.service.transfer.exception.PayeeNotRegisteredException;
 import com.exercise.banking.service.transfer.model.Account;
 import com.exercise.banking.service.transfer.model.Bank;
 import com.exercise.banking.service.transfer.model.Payee;
+import com.exercise.banking.service.transfer.model.Transaction;
 import com.exercise.banking.service.transfer.repository.AccountRepository;
 import com.exercise.banking.service.transfer.repository.PayeeRepository;
 import com.exercise.banking.service.transfer.service.impl.AccountServiceImpl;
@@ -95,6 +98,73 @@ class AccountServiceImplTest {
 	    assertEquals("PAYER001", retrieved.getAccNum(), "The  account number should match");
 	    assertEquals(new BigDecimal("1000.00"),retrieved.getBalance(), "The balance should match");
 	    assertEquals(testBank1, retrieved.getBank(), "The bank should match the expected bank");
+	}
+	
+	@Test
+	void testCreditToAccountl() {
+	    // Setup the bank instance
+	    Bank testBank1 = new Bank();
+	    testBank1.setCode("testCode1");
+	    testBank1.setName("testBank1");
+
+	    // Setup the payer account with an initial balance and link to the bank
+	    Account payerAccount = new Account("PAYER001", new BigDecimal("1000.00"), "Payer1", testBank1, new HashSet<>());
+	    
+	    when(accRepo.findById("PAYER001")).thenReturn(Optional.of(payerAccount));
+	    when(accRepo.save(payerAccount)).thenReturn(payerAccount);
+	    
+	    BigDecimal amount = BigDecimal.valueOf(200);
+	    
+	    // Call the method under test
+	    Account retrieved = accountService.creditToAccount(payerAccount, amount, requestId);
+	    
+	    // Validate the result
+	    assertNotNull(retrieved, "The retrieved account should not be null");
+	    assertEquals("PAYER001", retrieved.getAccNum(), "The  account number should match");
+	    assertEquals(new BigDecimal("1200.00"),retrieved.getBalance(), "The balance should match");
+	}
+	
+	@Test
+	void testDebitFromAccountl() {
+	    // Setup the bank instance
+	    Bank testBank1 = new Bank();
+	    testBank1.setCode("testCode1");
+	    testBank1.setName("testBank1");
+
+	    // Setup the payer account with an initial balance and link to the bank
+	    Account payerAccount = new Account("PAYER001", new BigDecimal("1000.00"), "Payer1", testBank1, new HashSet<>());
+	    
+	    when(accRepo.findById("PAYER001")).thenReturn(Optional.of(payerAccount));
+	    when(accRepo.save(payerAccount)).thenReturn(payerAccount);
+	    
+	    BigDecimal amount = BigDecimal.valueOf(200);
+	    
+	    // Call the method under test
+	    Account retrieved = accountService.debitFromAccount(payerAccount, amount, requestId);
+	    
+	    // Validate the result
+	    assertNotNull(retrieved, "The retrieved account should not be null");
+	    assertEquals("PAYER001", retrieved.getAccNum(), "The  account number should match");
+	    assertEquals(new BigDecimal("800.00"),retrieved.getBalance(), "The balance should match");
+	}
+	
+	@Test
+	void testDebitWithInSufficientFunds() {
+	    // Setup the bank instance
+	    Bank testBank1 = new Bank();
+	    testBank1.setCode("testCode1");
+	    testBank1.setName("testBank1");
+
+	    // Setup the payer account with an initial balance and link to the bank
+	    Account payerAccount = new Account("PAYER001", new BigDecimal("1000.00"), "Payer1", testBank1, new HashSet<>());
+	    
+	    when(accRepo.findById("PAYER001")).thenReturn(Optional.of(payerAccount));
+	    when(accRepo.save(payerAccount)).thenReturn(payerAccount);
+	    
+	    BigDecimal amount = BigDecimal.valueOf(1200);
+	    
+	    // Call the method under test
+		assertThrows(InsufficientFundsException.class, () -> accountService.debitFromAccount(payerAccount, amount, requestId));
 	}
 
 	@Test
